@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import pickle
+from .loader import *
 
 
 class VehicleDataset(Dataset):
@@ -43,8 +44,29 @@ class VehicleDataset(Dataset):
         self.vehicle_objects = vehicle_objects
 
 
+class Trajectories(Dataset):
+
+    def __init__(self, csv_file=None, root_dir=None, transform=None, data=None):
+
+        if csv_file is not None:
+            self.all_data = np.array(pd.read_csv(csv_file, delimiter=',', header=0))
+        else:
+            self.all_data = data
+        self.root_dir = root_dir
+        self.transform = transform
+        self.vehicle_objects = None
+
+    def __len__(self):
+        """returns with a trajectory sample"""
+        return len(self.vehicle_objects)
+
+    def __getitem__(self, idx):
+        """returns with a trajectory sample"""
+        return self.all_data[idx]
+
+
 class VehicleData:
-    """class for Vehicles. Instantiate in VehicleDataset.__getitem__"""
+
     def __init__(self, data):
         # car ID
         self.id = int(data[0, 0])
@@ -97,3 +119,14 @@ class VehicleData:
                 l_change.append([0, self.frames[i + 1]])
         l_change = np.array(l_change)
         self.set_change_lane(l_change)
+
+
+if __name__ == 'main':
+
+    csv_name = "../si_data.csv"
+    dataset = VehicleDataset(csv_name)
+    dataset.create_objects()
+
+    dataset_keep = Trajectories(dataloader(dataset))
+    dataset_left = Trajectories(dataloader(dataset))
+    dataset_right = Trajectories(dataloader(dataset))
