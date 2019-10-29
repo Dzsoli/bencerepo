@@ -1,29 +1,24 @@
 from __future__ import print_function, division
 
 import torch
+import torch.nn as nn
+import torch.optim as optim
 
-import core.common.models as models
-import core.common.vehicle as vehicle
-import core.common.loader as loader
+from core.utils import *
+from core.common import *
 
 # Ignore warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-csv_name = "../si_data.csv"
+data = torch.from_numpy(np.load('../../../full_data/dataset.npy')).float()
+labels = torch.LongTensor(np.load('../../../full_data/labels.npy'))
 
-dataset = vehicle.VehicleDataset(csv_name)
-dataset.create_objects()
-
-# hyperparameters.
-# TODO: move to hyperparam.py
 lr = 0.005
-num_epochs = 10
+num_epochs = 20
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-data = torch.from_numpy(data).float()
-labels = torch.LongTensor(labels)
-model = models.LSTM()
+model = models.SimpleLSTM(3, 10)
 model = model.to(device)
 # loss = nn.CrossEntropyLoss()
 # loss = nn.MultiLabelSoftMarginLoss()
@@ -33,16 +28,15 @@ optimizer = optim.Adam(model.parameters(), lr=lr)
 
 for epoch in range(num_epochs):
     model.train()
-    for i in range(87):
-        print(i)
-        input_batch = data[i].to(device)
-        input_label = labels[i].to(device=device, dtype=torch.float)
-        out = model(input_batch)
-        # print(out)
-        # print(input_label)
-        err = loss(out, input_label)
-        optimizer.zero_grad()
-        err.backward()
-        optimizer.step()
 
-        print('epoch: {}, loss: {}'.format(epoch, err))
+    input_batch = data.to(device)
+    input_label = labels.to(device=device, dtype=torch.float)
+    out = model(input_batch)
+    # print(out)
+    # print(input_label)
+    err = loss(out, input_label)
+    optimizer.zero_grad()
+    err.backward()
+    optimizer.step()
+
+    print('epoch: {}, loss: {}'.format(epoch, err))

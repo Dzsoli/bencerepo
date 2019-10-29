@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import csv
 import torch
 import numpy as np
@@ -5,6 +7,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import pickle
+from core.common import *
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+feetToMeters = lambda feet: float(feet) * 0.3048
+converters_dict = {'Local_X': feetToMeters,
+                   'Local_Y': feetToMeters,
+                   'v_length': feetToMeters,
+                   'v_Width': feetToMeters,
+                   'v_Vel': feetToMeters,
+                   'v_Acc': feetToMeters,
+                   'Space_Headway': feetToMeters}
 
 
 class VehicleDataset(Dataset):
@@ -15,7 +28,8 @@ class VehicleDataset(Dataset):
         """
         asd
         """
-        self.all_data = np.array(pd.read_csv(csv_file, delimiter=',', header=None))
+        # TODO: csak akkor kell konverter ha nem a clean van betöltve
+        self.all_data = pd.read_csv(csv_file, delimiter=',', header=0)
         self.root_dir = root_dir
         self.transform = transform
         self.vehicle_objects = None
@@ -31,16 +45,125 @@ class VehicleDataset(Dataset):
     def create_objects(self):
         i = 0
         vehicle_objects = []
-        while len(self.all_data) > i:
-            total_frames = int(self.all_data[i][2])
+        all_data = np.array(self.all_data)
+        while len(all_data) > i:
+            total_frames = int(all_data[i][2])
             until = i + total_frames
-            data = self.all_data[i:until]
+            data = all_data[i:until]
             vehicle = VehicleData(data)
             # vehicle.lane_changing()
             #TODO: labeling számítás
             vehicle_objects.append(vehicle)
             i = until
         self.vehicle_objects = vehicle_objects
+
+    def create_vehicle_objects(self):
+        vehicle_objects = []
+        for _, vehicle_id in self.all_data.groupby('Vehicle_ID'):
+            for _, vehicle_id_tf in vehicle_id.groupby('Total_Frames'):
+                vehicle = VehicleData(np.array(vehicle_id_tf))
+                vehicle_objects.append(vehicle)
+        self.vehicle_objects = vehicle_objects
+
+
+class Trajectories(Dataset):
+
+    def __init__(self, left=None, right=None, keep=None, window_size=None, shift=None,
+                 csv_file=None, root_dir=None, transform=None, data=None, dataset=None, labels=None):
+
+        if csv_file is not None:
+            self.all_data = np.array(pd.read_csv(csv_file, delimiter=',', header=0))
+        else:
+            self.all_data = data
+        self.left = left
+        self.right = right
+        self.keep = keep
+        self.window_size = window_size
+        self.shift = shift
+        self.root_dir = "../../../full_data/"
+        self.transform = transform
+        self.vehicle_objects = None
+        # TODO: dataset, labeling
+        self.dataset = dataset
+        self.labels = labels
+
+        # TODO: CHECK!!! window_size, shift, is part of the structure
+
+    def __len__(self):
+        """returns with a trajectory sample"""
+        return self.dataset.shape[0]
+
+    def __getitem__(self, idx):
+        """returns with a trajectory sample"""
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        sample = {'data': self.dataset[idx], 'label': self.labels[idx]}
+        if self.transform is not None:
+            sample = self.transform(sample)
+        return sample
+
+    def __add__(self, other: Trajectories):
+
+        assert ((self.window_size == other.window_size) & (self.shift == other.shift))
+        left = np.concatenate((self.left, other.left), axis=0)
+        right = np.concatenate((self.right, other.right), axis=0)
+        keep = np.concatenate((self.keep, other.keep), axis=0)
+        # TODO: add labels
+        return Trajectories(left, right, keep, self.window_size, self.shift)
+
+    def __iadd__(self, other: Trajectories):
+        assert ((self.window_size == other.window_size) & (self.shift == other.shift))
+        self.left = np.concatenate((self.left, other.left), axis=0)
+        self.right = np.concatenate((self.right, other.right), axis=0)
+        self.keep = np.concatenate((self.keep, other.keep), axis=0)
+        # TODO: iadd labels
+        return self
+
+    def create_dataset(self):
+        left_size = self.left.shape[0]
+        right_size = self.right.shape[0]
+        keep_size = self.keep.shape[0]
+        min_size = np.min((left_size, right_size, keep_size))
+        np.random.seed(seed=420)
+        conc = np.concatenate((self.left[np.random.choice(left_size, min_size, replace=False), :],
+                               self.right[np.random.choice(right_size, min_size, replace=False), :],
+                               self.keep[np.random.choice(keep_size, min_size, replace=False), :]),
+                              axis=0)
+
+        np.random.seed(seed=911)
+        self.dataset = conc[np.random.permutation(conc.shape[0])]
+        self.create_labels(min_size)
+
+    def create_labels(self, size: int):
+        l = np.array([1, 0, 0])
+        k = np.array([0, 1, 0])
+        r = np.array([0, 0, 1])
+        labels = np.zeros((size * 3, 3))
+        for i in range(0, size):
+            labels[i] = l
+            labels[i + size] = r
+            labels[i + 2 * size] = k
+        np.random.seed(seed=911)
+        self.labels = labels[np.random.permutation(size * 3)]
+
+    def write_csv(self):
+        # TODO
+        path = self.root_dir
+        np.savetxt(path + "left.csv", self.left, delimiter=",")
+        np.savetxt(path + "right.csv", self.right, delimiter=",")
+        np.savetxt(path + "keep.csv", self.keep, delimiter=",")
+
+    def save_np_array(self):
+        path = self.root_dir
+        np.save(path + 'left.npy', self.left)
+        np.save(path + 'right.npy', self.right)
+        np.save(path + 'keep.npy', self.keep)
+
+    def save_np_dataset_labels(self):
+        path = self.root_dir
+        np.save(path + 'dataset.npy', self.dataset)
+        np.save(path + 'labels.npy', self.labels)
 
 
 class VehicleData:
@@ -79,7 +202,7 @@ class VehicleData:
 
     def __getitem__(self, frame_number):
         item = []
-        # returns a numpy array vector with features corresponding a specific frame number. The first frame is the zero.
+        # returns a numpy array with features corresponding to a specific frame number. The first frame is the zeroth.
         return item
 
     def set_change_lane(self, l_change):
@@ -97,3 +220,25 @@ class VehicleData:
                 l_change.append([0, self.frames[i + 1]])
         l_change = np.array(l_change)
         self.set_change_lane(l_change)
+
+
+class ToDevice(object):
+    def __call__(self, sample):
+        # print(sample['data'].shape)
+        sample = {'data': torch.from_numpy(sample['data'].transpose((1, 0))).float().to(device),
+                  'label': torch.from_numpy(sample['label']).to(device=device, dtype=torch.float)}
+        return sample
+
+
+if __name__ == '__main__':
+
+    csv_file = "../../../full_data/full_data.csv"
+    sorted_xlsx = "../../../full_data/full_data_sorted.xlsx"
+    sorted_csv = "../../../full_data/full_data_sorted.csv"
+
+    x = pd.read_csv(csv_file, delimiter=',', header=0)
+    x = x.sort_values(by=['Vehicle_ID', 'Frame_ID'])
+    x.to_csv(sorted_csv)
+    # x.to_excel(sorted_csv)
+    # y = pd.read_excel(sorted_csv, nrows=100)
+

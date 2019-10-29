@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import torch
+from torch._C import device
 
 from torch.nn import functional as F
 from torch.autograd import Variable
@@ -24,7 +25,8 @@ class SimpleLSTM(nn.Module):
             input_size=input_size,
             hidden_size=hidden_size,
             num_layers=1,
-            batch_first=True,
+            dropout=0.8,
+            batch_first=True,  # ez jelenti azt hogy az első dimenzióban a batch méret van
         )
         self.softmax = nn.Softmax()
         self.linear = nn.Linear(self.hidden_size, 3)
