@@ -92,10 +92,12 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Tra
             keep_data[total_idx] = features
             total_idx += 1
 
+    # reshape the arrays in order to block the trajectories by vehicles
+    left_data = np.reshape(left_data, (len(left_iter), N, 3, window_size))
+    right_data = np.reshape(right_data, (len(right_iter), N, 3, window_size))
+    keep_data = np.reshape(keep_data, (len(keep_iter), N, 3, window_size))
+
     traject = Trajectories(left_data, right_data, keep_data, window_size, shift)
-    # traject.write_csv()
-    # TODO: refactor the next line
-    # traject.save_np_array()
     return traject
 
 

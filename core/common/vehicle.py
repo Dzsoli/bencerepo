@@ -139,13 +139,18 @@ class Trajectories(Dataset):
         l = np.array([1, 0, 0])
         k = np.array([0, 1, 0])
         r = np.array([0, 0, 1])
+
+        N = int(self.window_size / self.shift)
+        size = N * size
         labels = np.zeros((size * 3, 3))
         for i in range(0, size):
             labels[i] = l
             labels[i + size] = r
             labels[i + 2 * size] = k
+
+        labels = np.reshape(labels, (-1, N, 3))
         np.random.seed(seed=911)
-        self.labels = labels[np.random.permutation(size * 3)]
+        self.labels = labels[np.random.permutation(labels.shape[0])]
 
     def write_csv(self):
         # TODO
