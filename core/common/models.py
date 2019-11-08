@@ -16,7 +16,7 @@ MAX_LENGTH = 30
 
 
 class SimpleLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size):
+    def __init__(self, input_size, hidden_size, n_layers):
         super(SimpleLSTM, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -24,7 +24,7 @@ class SimpleLSTM(nn.Module):
         self.rnn = nn.LSTM(
             input_size=input_size,
             hidden_size=hidden_size,
-            num_layers=1,
+            num_layers=n_layers,
             dropout=0.8,
             batch_first=True,  # ez jelenti azt hogy az első dimenzióban a batch méret van
         )
