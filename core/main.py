@@ -18,21 +18,25 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def train_lstm():
-    lr = 0.2
-    num_epochs = 5000
-    # batch_size = 512
-    data = np.load('../../full_data/dataset.npy')
-    labels = np.load('../../full_data/labels.npy')
+def train_lstm(l_train_loader, l_test_loader, l_lr, l_num_epochs, l_neuron, l_layers):
 
     # model and optimizer
-    model = SimpleLSTM(3, 7).to(models.device)
+    model = SimpleLSTM(3, l_neuron, l_layers).to(models.device)
     loss_fn = nn.BCELoss()
-    optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=1e-6, momentum=0.9, nesterov=True)
-    optimizer_adam = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
+    optimizer = optim.SGD(model.parameters(), lr=l_lr, weight_decay=1e-6, momentum=0.9, nesterov=True)
+    optimizer_adam = optim.Adam(model.parameters(), lr=l_lr)
 
-    lstm_training.run(l_data=data, l_labels=labels, l_model=model, l_loss_fn=loss_fn, l_optimizer=optimizer_adam)
+    lstm_training.run(l_train_loader=l_train_loader, l_test_loader=l_test_loader, l_model=model, l_loss_fn=loss_fn,
+                      l_num_epochs=l_num_epochs, l_optimizer=optimizer_adam, l_lr=l_lr)
 
 
 if __name__ == '__main__':
-    train_lstm()
+
+    path = "../../../results"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    train_loader, test_loader = lstm_training.load_data()
+    lr_list = [0.01, 0.02, 0.05, 0.1]
+    for rate in lr_list:
+        epoch = 1500
+        train_lstm(train_loader, test_loader, rate, epoch, l_neuron=14, l_layers=1)
