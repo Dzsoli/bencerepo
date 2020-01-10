@@ -20,7 +20,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def load_data(path='../../full_data/'):
+def load_data(path='../../../full_data/'):
 
     l_data = np.load(path + 'dataset.npy')
     l_labels = np.load(path + 'labels.npy')
@@ -133,8 +133,8 @@ def valid(l_model, l_valid_loader, l_loss_fn):
 
 
 if __name__ == '__main__':
-    lr = 0.05
-    num_epochs = 20
+    lr = 0.04
+    num_epochs = 1500
     # batch_size = 512
     train_loader, test_loader = load_data()
 

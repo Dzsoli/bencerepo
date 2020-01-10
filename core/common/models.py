@@ -25,7 +25,7 @@ class SimpleLSTM(nn.Module):
             input_size=input_size,
             hidden_size=hidden_size,
             num_layers=n_layers,
-            dropout=0.8,
+            dropout=0.2,
             batch_first=True,  # ez jelenti azt hogy az első dimenzióban a batch méret van
         )
         self.softmax = nn.Softmax()
@@ -158,3 +158,43 @@ class DecoderRNN(nn.Module):
 #     es = s / (percent)
 #     rs = es - s
 #     return '%s (- %s)' % (asMinutes(s), asMinutes(rs))
+
+class CNN(nn.Module):
+    def __init__(self):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv1d(in_channels=3, out_channels=16, kernel_size=5, stride=1, padding=2),
+            # nn.InstanceNorm1d(16),
+            nn.PReLU(16),
+            nn.Conv1d(in_channels=16, out_channels=64, kernel_size=7, stride=1, padding=3),
+            # nn.InstanceNorm1d(64),
+            nn.PReLU(64),
+            nn.Conv1d(in_channels=64, out_channels=128, kernel_size=9, stride=1, padding=4),
+            # nn.InstanceNorm1d(128),
+            nn.PReLU(128),
+            nn.AvgPool1d(kernel_size=3)
+        )
+        # self.conv2 = nn.Sequential(
+        #     nn.Conv1d(in_channels=16, out_channels=64, kernel_size=3, stride=1, padding=1),
+        #     nn.ReLU(),
+        #     nn.MaxPool1d(kernel_size=2),
+        # )
+        # self.conv3 = nn.Sequential(
+        #     nn.Conv1d(in_channels=64, out_channels=265, kernel_size=5, stride=1, padding=2),
+        #     nn.ReLU(),
+        #     nn.MaxPool1d(kernel_size=2),
+        # )
+        self.drop_out = nn.Dropout()
+        self.fc1 = nn.Linear(1280, 560)  # output 3 classes: ...
+        self.fc2 = nn.Linear(560, 3)
+        self.soft = nn.Softmax()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        # x = self.conv2(x)
+        # x = self.conv3(x)
+        x = self.drop_out(x)
+        output = self.fc1(x.view(x.size()[0], -1))
+        output = self.fc2(output)
+        output = self.soft(output)
+        return output

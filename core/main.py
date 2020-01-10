@@ -32,11 +32,13 @@ def train_lstm(l_train_loader, l_test_loader, l_lr, l_num_epochs, l_neuron, l_la
 
 if __name__ == '__main__':
 
-    path = "../../../results"
-    if not os.path.exists(path):
-        os.makedirs(path)
-    train_loader, test_loader = lstm_training.load_data()
-    lr_list = [0.01, 0.02, 0.05, 0.1]
-    for rate in lr_list:
-        epoch = 1500
-        train_lstm(train_loader, test_loader, rate, epoch, l_neuron=14, l_layers=1)
+    # path = "../../../results"
+    # if not os.path.exists(path):
+    #     os.makedirs(path)
+    # train_loader, test_loader = lstm_training.load_data(path='../../full_data/')
+    # lr_list = [0.01, 0.02, 0.05, 0.1]
+    # for rate in lr_list:
+    #     epoch = 1500
+    #     train_lstm(train_loader, test_loader, rate, epoch, l_neuron=14, l_layers=1)
+
+    train_multi_svc(path='../../full_data/')

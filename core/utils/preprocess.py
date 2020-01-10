@@ -17,7 +17,8 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Tra
     right_iter = []
     keep_iter = []
     total_idx = 0
-    features = np.zeros((3, window_size))
+    number_of_features = 3
+    features = np.zeros((number_of_features, window_size))
     N = int(window_size / shift)
     #
     for idx, vehicle in enumerate(vehicle_objects):
@@ -37,9 +38,9 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Tra
             keep_iter.append(idx)
             number += 1
     # 3 * N-ben nem kell a 3 szorzó
-    left_data = np.zeros((len(left_iter) * N, 3, window_size))
-    keep_data = np.zeros((len(keep_iter) * N, 3, window_size))
-    right_data = np.zeros((len(right_iter) * N, 3, window_size))
+    left_data = np.zeros((len(left_iter) * N, number_of_features, window_size))
+    keep_data = np.zeros((len(keep_iter) * N, number_of_features, window_size))
+    right_data = np.zeros((len(right_iter) * N, number_of_features, window_size))
 
     left_data.shape
     keep_data.shape

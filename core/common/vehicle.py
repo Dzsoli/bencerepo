@@ -205,6 +205,8 @@ class VehicleData:
         # mean, variance, changes or not?, frame id
         self.labels = None
 
+        self.indicator = None
+
     def __getitem__(self, frame_number):
         item = []
         # returns a numpy array with features corresponding to a specific frame number. The first frame is the zeroth.
@@ -225,6 +227,19 @@ class VehicleData:
                 l_change.append([0, self.frames[i + 1]])
         l_change = np.array(l_change)
         self.set_change_lane(l_change)
+
+    def lane_change_indicator(self):
+        j = 0
+        indicator = 0
+        index = 0
+
+        while (j < self.size -1) & (index == 0):
+            difference = self.lane_id[j + 1] - self.lane_id[j]
+            if difference != 0:
+                index = j
+                indicator = difference
+            j = j + 1
+        self.indicator = [index, indicator]
 
 
 class ToDevice(object):
