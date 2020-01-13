@@ -33,6 +33,9 @@ class VehicleDataset(Dataset):
         self.root_dir = root_dir
         self.transform = transform
         self.vehicle_objects = None
+        self.left_iter = None
+        self.right_iter = None
+        self.keep_iter = None
 
     def __len__(self):
         """returns with all the number of frames of the dataset"""

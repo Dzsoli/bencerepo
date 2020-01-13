@@ -41,6 +41,11 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Tra
         if lane_change_idx == 0:
             keep_iter.append(idx)
             number += 1
+
+    raw_dataset.left_iter = left_iter
+    raw_dataset.right_iter = right_iter
+    raw_dataset.keep_iter = keep_iter
+
     # 3 * N-ben nem kell a 3 szorzó
     left_data = np.zeros((len(left_iter) * N, number_of_features, window_size))
     keep_data = np.zeros((len(keep_iter) * N, number_of_features, window_size))
