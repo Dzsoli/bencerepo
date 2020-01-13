@@ -240,6 +240,7 @@ class VehicleData:
                 indicator = difference
             j = j + 1
         self.indicator = [index, indicator]
+        return self.indicator
 
 
 class ToDevice(object):

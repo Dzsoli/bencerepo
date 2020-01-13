@@ -21,17 +21,21 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Tra
     features = np.zeros((number_of_features, window_size))
     N = int(window_size / shift)
     #
-    for idx, vehicle in enumerate(vehicle_objects):
+    for idx, l_vehicle in enumerate(vehicle_objects):
         # TODO: Az iterátorokat tagfüggvény hozza létre
-        if N * window_size > vehicle.size:
+        if N * window_size > l_vehicle.size:
             continue
-        lane_change_idx, labels = lane_change_to_idx(vehicle)
+        # lane_change_idx, labels = lane_change_to_idx(vehicle)
+        if l_vehicle.lane_change_indicator() is None:
+            continue
+        else:
+            lane_change_idx, indicator = l_vehicle.indicator
         if lane_change_idx > 3 * window_size:
             # print(vehicle.id)
-            if labels == 1:
+            if indicator == 1:
                 number_right += 1
                 right_iter.append(idx)
-            if labels == -1:
+            if indicator == -1:
                 number_left += 1
                 left_iter.append(idx)
         if lane_change_idx == 0:
