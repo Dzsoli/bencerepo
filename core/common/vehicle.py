@@ -71,7 +71,7 @@ class VehicleDataset(Dataset):
 
 class Trajectories(Dataset):
 
-    def __init__(self, left=None, right=None, keep=None, window_size=None, shift=None,
+    def __init__(self, left=None, right=None, keep=None, window_size=None, shift=None, featnumb=None,
                  csv_file=None, root_dir=None, transform=None, data=None, dataset=None, labels=None):
 
         if csv_file is not None:
@@ -83,6 +83,7 @@ class Trajectories(Dataset):
         self.keep = keep
         self.window_size = window_size
         self.shift = shift
+        self.featnumb = featnumb
         self.root_dir = "../../../full_data/"
         self.transform = transform
         self.vehicle_objects = None
