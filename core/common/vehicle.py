@@ -169,10 +169,10 @@ class Trajectories(Dataset):
         np.save(path + 'right.npy', self.right)
         np.save(path + 'keep.npy', self.keep)
 
-    def save_np_dataset_labels(self):
+    def save_np_dataset_labels(self, name):
         path = self.root_dir
-        np.save(path + 'dataset.npy', self.dataset)
-        np.save(path + 'labels.npy', self.labels)
+        np.save(path + name + '_dataset.npy', self.dataset)
+        np.save(path + name + '_labels.npy', self.labels)
 
 
 class VehicleData:

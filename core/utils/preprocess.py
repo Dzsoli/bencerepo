@@ -169,9 +169,9 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dic
 
     dX_traject = Trajectories(dX_left_data, dX_right_data, dX_keep_data, window_size, shift, featnumb=1)
     X_traject = Trajectories(X_left_data, X_right_data, X_keep_data, window_size, shift, featnumb=1)
-    dX_Y_traject = Trajectories(dX_Y_left_data, dX_Y_right_data, dX_Y_keep_data, window_size, shift, featnumb=1)
-    X_Y_traject = Trajectories(X_Y_left_data, X_Y_right_data, X_Y_keep_data, window_size, shift, featnumb=1)
-    dX_V_A_traject = Trajectories(dX_V_A_left_data, dX_V_A_right_data, dX_V_A_keep_data, window_size, shift, featnumb=1)
+    dX_Y_traject = Trajectories(dX_Y_left_data, dX_Y_right_data, dX_Y_keep_data, window_size, shift, featnumb=2)
+    X_Y_traject = Trajectories(X_Y_left_data, X_Y_right_data, X_Y_keep_data, window_size, shift, featnumb=2)
+    dX_V_A_traject = Trajectories(dX_V_A_left_data, dX_V_A_right_data, dX_V_A_keep_data, window_size, shift, featnumb=3)
 
     return {"dX": dX_traject,
             "X": X_traject,
@@ -183,17 +183,19 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dic
 def run():
     i_80 = "../../../full_data/i-80.csv"
     us_101 = "../../../full_data/us-101.csv"
-    raw_dataset = VehicleDataset(us_101)
-    raw_dataset.create_vehicle_objects()
+    raw_dataset_1 = VehicleDataset(us_101)
+    raw_dataset_1.create_vehicle_objects()
     # print(raw_dataset.vehicle_objects[0].lane_id, raw_dataset.vehicle_objects[1].lane_id)
     window_size = 30
     shift = 5
-    trajectories = preprocess(raw_dataset, window_size, shift)
-    raw_dataset = VehicleDataset(i_80)
-    raw_dataset.create_vehicle_objects()
-    trajectories += preprocess(raw_dataset, window_size, shift)
-    trajectories.create_dataset()
-    trajectories.save_np_dataset_labels()
+    dict_trajectories_1 = preprocess(raw_dataset_1, window_size, shift)
+    raw_dataset_2 = VehicleDataset(i_80)
+    raw_dataset_2.create_vehicle_objects()
+    dict_trajectories_2 = preprocess(raw_dataset_2, window_size, shift)
+    for key in dict_trajectories_1:
+        traject = dict_trajectories_1[key] + dict_trajectories_2[key]
+        traject.create_dataset()
+        traject.save_np_dataset_labels(name=key)
 
 
 if __name__ == '__main__':
