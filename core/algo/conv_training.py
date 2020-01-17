@@ -22,20 +22,20 @@ warnings.filterwarnings("ignore")
 
 def load_data(path='../../../full_data/'):
 
-    l_data = np.load(path + 'dataset.npy')
-    l_labels = np.load(path + 'labels.npy')
+    l_data = np.load(path + 'dX_Y_dataset.npy')
+    l_labels = np.load(path + 'dX_Y_labels.npy')
 
     # quotient for chopping the data
     q = 0.2
 
     # TODO: the window_size and shift (and the N=6) is not in this scope
-    l_data = np.reshape(l_data, (-1, 3, 30))
+    l_data = np.reshape(l_data, (-1, 2, 30))
 
     # normalize
     l_data = l_data / np.linalg.norm(l_data, axis=0)
-    l_data = np.reshape(l_data, (-1, 6, 3, 30))
+    l_data = np.reshape(l_data, (-1, 6, 2, 30))
     # train data
-    train_data = torch.from_numpy(np.reshape(l_data[0:int((1 - q) * l_data.shape[0])], (-1, 3, 30))).float()
+    train_data = torch.from_numpy(np.reshape(l_data[0:int((1 - q) * l_data.shape[0])], (-1, 2, 30))).float()
     train_labels = torch.from_numpy(np.reshape(l_labels[0:int((1 - q) * l_data.shape[0])], (-1, 3))).float()
     dataset_train = TensorDataset(train_data, train_labels)
     l_train_loader = DataLoader(dataset_train, batch_size=train_data.shape[0], shuffle=True)
@@ -47,7 +47,7 @@ def load_data(path='../../../full_data/'):
     # valid_loader = DataLoader(dataset_valid, batch_size=int(q * l_data.shape[0]) + 1, shuffle=True)
 
     # test data
-    test_data = torch.from_numpy(np.reshape(l_data[int((1 - q) * l_data.shape[0]):], (-1, 3, 30))).float()
+    test_data = torch.from_numpy(np.reshape(l_data[int((1 - q) * l_data.shape[0]):], (-1, 2, 30))).float()
     test_labels = torch.from_numpy(np.reshape(l_labels[int((1 - q) * l_data.shape[0]):], (-1, 3))).float()
     dataset_test = TensorDataset(test_data, test_labels)
     l_test_loader = DataLoader(dataset_test, batch_size=test_data.shape[0], shuffle=True)
@@ -57,7 +57,7 @@ def load_data(path='../../../full_data/'):
 
 if __name__ == '__main__':
     lr = 0.05
-    num_epochs = 2000
+    num_epochs = 750
     # batch_size = 512
     train_loader, test_loader = load_data()
 

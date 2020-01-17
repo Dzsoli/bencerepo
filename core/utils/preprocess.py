@@ -96,6 +96,7 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dic
             delta_X = (vehicle_objects[left].x[index: index + window_size]
                            - vehicle_objects[left].x[index - 1: index + window_size - 1])
             X = vehicle_objects[left].x[index: index + window_size]
+            Y = vehicle_objects[left].y[index: index + window_size]
             V = vehicle_objects[left].v[index: index + window_size]
             A = vehicle_objects[left].a[index: index + window_size]
 
@@ -115,6 +116,7 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dic
             delta_X = (vehicle_objects[right].x[index: index + window_size]
                        - vehicle_objects[right].x[index - 1: index + window_size - 1])
             X = vehicle_objects[right].x[index: index + window_size]
+            Y = vehicle_objects[right].y[index: index + window_size]
             V = vehicle_objects[right].v[index: index + window_size]
             A = vehicle_objects[right].a[index: index + window_size]
 
@@ -136,6 +138,7 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dic
             delta_X = (vehicle_objects[keep].x[index: index + window_size]
                        - vehicle_objects[keep].x[index - 1: index + window_size - 1])
             X = vehicle_objects[keep].x[index: index + window_size]
+            Y = vehicle_objects[keep].y[index: index + window_size]
             V = vehicle_objects[keep].v[index: index + window_size]
             A = vehicle_objects[keep].a[index: index + window_size]
 

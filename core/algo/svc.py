@@ -26,8 +26,8 @@ def calculate_mean_std(l_data):
 
 
 def train_multi_svc(path='../../../full_data/'):
-    l_data = np.load(path + 'dataset.npy')
-    l_labels = np.load(path + 'labels.npy')
+    l_data = np.load(path + 'dX_dataset.npy')
+    l_labels = np.load(path + 'dX_labels.npy')
 
     q = 0.2
     np.random.seed(seed=1)
@@ -36,7 +36,7 @@ def train_multi_svc(path='../../../full_data/'):
     l_labels = l_labels[np.random.choice(l_labels.shape[0], 100, replace=False), :]
 
     # TODO: the window_size and shift (and the N=6) is not in this scope
-    l_data = np.reshape(l_data, (-1, 3, 30))
+    l_data = np.reshape(l_data, (-1, 30))
     l_labels = np.reshape(l_labels, (-1, 3))
 
     # normalize
@@ -46,7 +46,7 @@ def train_multi_svc(path='../../../full_data/'):
     # train data
     train_data = l_data[0:int((1 - q) * l_data.shape[0])]
     # choose the delta X feature only
-    train_data = calculate_mean_std(train_data[:, 0, :])
+    train_data = calculate_mean_std(train_data)
     train_labels = l_labels[0:int((1 - q) * l_data.shape[0])]
     # transform to scalars (-1, 0, 1)
     train_labels = np.argmax(train_labels, axis=1) - 1
@@ -55,10 +55,10 @@ def train_multi_svc(path='../../../full_data/'):
     # print(train_labels.shape)
 
     # test data
-    test_data = np.reshape(l_data[int((1 - q) * l_data.shape[0]):], (-1, 3, 30))
+    test_data = l_data[int((1 - q) * l_data.shape[0]):]
     # choose the delta X feature only
-    test_data = calculate_mean_std(test_data[:, 0, :])
-    test_labels = np.reshape(l_labels[int((1 - q) * l_data.shape[0]):], (-1, 3))
+    test_data = calculate_mean_std(test_data)
+    test_labels = l_labels[int((1 - q) * l_data.shape[0]):]
     # transform to scalars (-1, 0, 1)
     test_labels = np.argmax(test_labels, axis=1) - 1
     # print(test_labels)
@@ -84,7 +84,7 @@ def train_multi_svc(path='../../../full_data/'):
         # clf = svm.NuSVC(nu=nu, kernel='rbf', gamma='scale', decision_function_shape='ovo')
         print('instantiation is done')
         try:
-            clf.fit(train_data.transpose((1, 0)), train_labels)
+            clf.fit(train_data, train_labels)
             print('fit is done')
             predicted_label = clf.predict(test_data)
             print('predict is done')

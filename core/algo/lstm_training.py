@@ -22,20 +22,20 @@ warnings.filterwarnings("ignore")
 
 def load_data(path='../../../full_data/'):
 
-    l_data = np.load(path + 'dataset.npy')
-    l_labels = np.load(path + 'labels.npy')
+    l_data = np.load(path + 'dX_Y_dataset.npy')
+    l_labels = np.load(path + 'dX_Y_labels.npy')
 
     # quotient for chopping the data
     q = 0.2
 
     # TODO: the window_size and shift (and the N=6) is not in this scope
-    l_data = np.reshape(l_data, (-1, 3, 30))
+    l_data = np.reshape(l_data, (-1, 2, 30))
 
     # normalize
     l_data = l_data / np.linalg.norm(l_data, axis=0)
-    l_data = np.reshape(l_data, (-1, 6, 3, 30))
+    l_data = np.reshape(l_data, (-1, 6, 2, 30))
     # train data
-    train_data = np.reshape(l_data[0:int((1 - q) * l_data.shape[0])], (-1, 3, 30))
+    train_data = np.reshape(l_data[0:int((1 - q) * l_data.shape[0])], (-1, 2, 30))
     train_labels = np.reshape(l_labels[0:int((1 - q) * l_data.shape[0])], (-1, 3))
     dataset_train = Trajectories(dataset=train_data, labels=train_labels, transform=ToDevice())
     l_train_loader = DataLoader(dataset_train, batch_size=train_data.shape[0], shuffle=True)
@@ -47,7 +47,7 @@ def load_data(path='../../../full_data/'):
     # valid_loader = DataLoader(dataset_valid, batch_size=int(q * l_data.shape[0]) + 1, shuffle=True)
 
     # test data
-    test_data = np.reshape(l_data[int((1 - q) * l_data.shape[0]):], (-1, 3, 30))
+    test_data = np.reshape(l_data[int((1 - q) * l_data.shape[0]):], (-1, 2, 30))
     test_labels = np.reshape(l_labels[int((1 - q) * l_data.shape[0]):], (-1, 3))
     dataset_test = Trajectories(dataset=test_data, labels=test_labels, transform=ToDevice())
     l_test_loader = DataLoader(dataset_test, batch_size=test_data.shape[0], shuffle=True)
@@ -133,13 +133,13 @@ def valid(l_model, l_valid_loader, l_loss_fn):
 
 
 if __name__ == '__main__':
-    lr = 0.04
+    lr = 0.042
     num_epochs = 1500
     # batch_size = 512
     train_loader, test_loader = load_data()
 
     # model and optimizer
-    model = SimpleLSTM(3, 7, 1).to(models.device)
+    model = SimpleLSTM(2, 7, 1).to(models.device)
     loss_fn = nn.BCELoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=1e-6, momentum=0.9, nesterov=True)
     optimizer_adam = optim.Adam(model.parameters(), lr=lr)
