@@ -31,9 +31,9 @@ def train_multi_svc(path='../../../full_data/'):
 
     q = 0.2
     np.random.seed(seed=1)
-    l_data = l_data[np.random.choice(l_data.shape[0], 100, replace=False), :]
-    np.random.seed(seed=1)
-    l_labels = l_labels[np.random.choice(l_labels.shape[0], 100, replace=False), :]
+    # l_data = l_data[np.random.choice(l_data.shape[0], 500, replace=False), :]
+    # np.random.seed(seed=1)
+    # l_labels = l_labels[np.random.choice(l_labels.shape[0], 500, replace=False), :]
 
     # TODO: the window_size and shift (and the N=6) is not in this scope
     l_data = np.reshape(l_data, (-1, 30))
@@ -44,9 +44,9 @@ def train_multi_svc(path='../../../full_data/'):
     # l_data = np.reshape(l_data, (-1, 6, 3, 30))
 
     # train data
-    train_data = l_data[0:int((1 - q) * l_data.shape[0])]
+    train_data = l_data[0:int((1 - q) * l_data.shape[0])]#, 0::5]
     # choose the delta X feature only
-    train_data = calculate_mean_std(train_data)
+    # train_data = calculate_mean_std(train_data)
     train_labels = l_labels[0:int((1 - q) * l_data.shape[0])]
     # transform to scalars (-1, 0, 1)
     train_labels = np.argmax(train_labels, axis=1) - 1
@@ -55,9 +55,9 @@ def train_multi_svc(path='../../../full_data/'):
     # print(train_labels.shape)
 
     # test data
-    test_data = l_data[int((1 - q) * l_data.shape[0]):]
+    test_data = l_data[int((1 - q) * l_data.shape[0]):]#, 0::5]
     # choose the delta X feature only
-    test_data = calculate_mean_std(test_data)
+    # test_data = calculate_mean_std(test_data)
     test_labels = l_labels[int((1 - q) * l_data.shape[0]):]
     # transform to scalars (-1, 0, 1)
     test_labels = np.argmax(test_labels, axis=1) - 1
@@ -79,6 +79,7 @@ def train_multi_svc(path='../../../full_data/'):
     numb = 1e-1
     for j in range(1, int(1 / numb)):
         C = 1.0 - j * numb
+        # C=C
         nu = 0.02 + j * numb * 0.02
         clf = svm.SVC(C=C, kernel='rbf', gamma='scale', decision_function_shape='ovo')
         # clf = svm.NuSVC(nu=nu, kernel='rbf', gamma='scale', decision_function_shape='ovo')
@@ -92,9 +93,16 @@ def train_multi_svc(path='../../../full_data/'):
             false_pos = 0
             false_neg = 0
             p = 0.3
+            good = 0
+            bad = 0
+
             if len(test_labels) == len(predicted_label):
                 print("dimensions equal")
                 for j in range(len(predicted_label)):
+                    if predicted_label[j] == test_labels[j]:
+                        good = good + 1
+                    else:
+                        bad = bad + 1
                     if predicted_label[j] == 1:
                         if test_labels[j] == 1:
                             true_pos += 1
@@ -109,7 +117,7 @@ def train_multi_svc(path='../../../full_data/'):
             recall = true_pos / (true_pos + false_neg)
             precision = true_pos / (true_pos + false_pos)
             sk_f1_score = m.f1_score(test_labels, predicted_label, average=None)
-            print("RECALL: ", recall, "PRECISION: ", precision, "SKLEARN_F_1: ", sk_f1_score)
+            print("RECALL: ", recall, "PRECISION: ", precision, "ACCURACY: ", good / (good + bad), "SKLEARN_F_1: ", sk_f1_score)
             print('C= ', C, 'TP= ', true_pos, 'FP= ', false_pos, 'FN= ', false_neg)
             classifier.append(
                 [clf, C, true_pos, false_neg, false_pos, recall, precision, sk_f1_score])
