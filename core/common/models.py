@@ -9,6 +9,7 @@ from torch import optim
 import torch.nn as nn
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = 'cpu'
 teacher_forcing_ratio = 0.5
 SOS_token = 0
 EOS_token = 1
@@ -160,10 +161,10 @@ class DecoderRNN(nn.Module):
 #     return '%s (- %s)' % (asMinutes(s), asMinutes(rs))
 
 class CNN(nn.Module):
-    def __init__(self):
+    def __init__(self, input_channels):
         super(CNN, self).__init__()
         self.conv1 = nn.Sequential(
-            nn.Conv1d(in_channels=3, out_channels=16, kernel_size=5, stride=1, padding=2),
+            nn.Conv1d(in_channels=input_channels, out_channels=16, kernel_size=5, stride=1, padding=2),
             # nn.InstanceNorm1d(16),
             nn.PReLU(16),
             nn.Conv1d(in_channels=16, out_channels=64, kernel_size=7, stride=1, padding=3),

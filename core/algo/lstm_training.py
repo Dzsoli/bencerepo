@@ -133,7 +133,7 @@ def valid(l_model, l_valid_loader, l_loss_fn):
 
 
 if __name__ == '__main__':
-    lr = 0.042
+    lr = 0.043
     num_epochs = 1500
     # batch_size = 512
     train_loader, test_loader = load_data()

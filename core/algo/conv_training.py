@@ -62,7 +62,7 @@ if __name__ == '__main__':
     train_loader, test_loader = load_data()
 
     # model and optimizer
-    model = CNN().to(models.device)
+    model = CNN(2).to(models.device)
     loss_fn = nn.BCELoss()
     # optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=1e-6, momentum=0.9, nesterov=True)
     optimizer = optim.Adam(model.parameters(), lr=lr)
