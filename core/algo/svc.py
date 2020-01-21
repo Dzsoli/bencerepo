@@ -9,6 +9,7 @@ import matplotlib.patches as pts
 import scipy
 # from sklearn.utils.fixes import loguniform
 from sklearn.model_selection import GridSearchCV
+import pandas as pd
 
 from core import *
 
@@ -135,17 +136,21 @@ def train_multi_svc(path='../../../full_data/'):
 
 def grid_search(path='../../../full_data/'):
     C = np.power(10,np.arange(-3, 3, 0.5)).tolist()
-    gamma = np.power(10,np.arange(-3, 0, 0.1)).tolist()
+    gamma = np.arange(1e-3, 1, 0.05).tolist()
+    gamma.append('scale')
     # grid_1 = {'C': loguniform(1e-3, 1e3), 'gamma': loguniform(1e-4, 1e-1), 'kernel': ['rbf']}
-    grid_2 = {'C': C, 'gamma': gamma, 'kernel': ['rbf']}
+    grid_2 = {'C': C, 'gamma': gamma, 'kernel': ['rbf'], 'decision_function_shape': ['ovr', 'ovo']}
     svc = svm.SVC()
-    clf = GridSearchCV(svc, grid_2, n_jobs=8)
+    clf = GridSearchCV(svc, grid_2, n_jobs=7)
 
     train_data, train_labels, test_data, test_labels = load(path, "dX")
     clf.fit(train_data, train_labels)
 
     sorted(clf.cv_results_.keys())
+    results = pd.DataFrame(clf.cv_results_)
     print(clf.best_estimator_)
+    results.to_csv('../../../svm_results/grid2_search.csv')
+
 
 
 if __name__ == "__main__":
