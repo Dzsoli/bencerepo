@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 data = torch.from_numpy(np.load('../../../full_data/dataset.npy')).float()
 labels = torch.LongTensor(np.load('../../../full_data/labels.npy'))
 
-lr = 0.005
+lr = 0.0042
 num_epochs = 20
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -32,6 +32,7 @@ for epoch in range(num_epochs):
     input_batch = data.to(device)
     input_label = labels.to(device=device, dtype=torch.float)
     out = model(input_batch)
+    out = out.to(device)
     # print(out)
     # print(input_label)
     err = loss(out, input_label)

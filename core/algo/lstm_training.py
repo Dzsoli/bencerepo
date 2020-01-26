@@ -69,6 +69,7 @@ def run(l_test_loader, l_train_loader, l_model, l_loss_fn, l_optimizer, l_num_ep
             print("Epoch: ", epoch)
         for i, sample in enumerate(l_train_loader):
             out = l_model(sample['data'])
+            out = out.to(models.device)
             loss = l_loss_fn(out, sample['label'])
 
             l_optimizer.zero_grad()
