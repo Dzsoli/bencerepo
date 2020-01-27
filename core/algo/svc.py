@@ -29,7 +29,7 @@ def calculate_mean_std(l_data):
     return newdata
 
 
-def load(path, features: str):
+def split_data(path, features: str):
     l_data = np.load(path + features + '_dataset.npy')
     l_labels = np.load(path + features + '_labels.npy')
 
@@ -69,7 +69,7 @@ def load(path, features: str):
 
 
 def train_multi_svc(path='../../../full_data/'):
-    train_data, train_labels, test_data, test_labels = load(path, "dX")
+    train_data, train_labels, test_data, test_labels = split_data(path, "dX")
 
     # size = len(vehicle_objects)
     # train_x, train_label = VehicleData.get_data(vehicle_objects[0:(size // 5) * 4:8])
@@ -143,7 +143,7 @@ def grid_search(path='../../../full_data/'):
     svc = svm.SVC()
     clf = GridSearchCV(svc, grid_2, n_jobs=7)
 
-    train_data, train_labels, test_data, test_labels = load(path, "dX")
+    train_data, train_labels, test_data, test_labels = split_data(path, "dX")
     clf.fit(train_data, train_labels)
 
     sorted(clf.cv_results_.keys())
@@ -152,7 +152,48 @@ def grid_search(path='../../../full_data/'):
     results.to_csv('../../../svm_results/grid2_search.csv')
 
 
+def best_testing(path='../../../full_data/'):
+    train_data, train_labels, test_data, test_labels = split_data(path, "dX")
+    C = 3.1622776601683795
+    degree = 3
+    gamma = 'scale'
+    kernel = 'rbf'
+    svc = svm.SVC(C, kernel, degree, gamma)
+    svc.fit(train_data, train_labels)
+    predicted_label = svc.predict(test_data)
+    true_pos = 0
+    false_pos = 0
+    false_neg = 0
+    p = 0.3
+    good = 0
+    bad = 0
+
+    if len(test_labels) == len(predicted_label):
+        print("dimensions equal")
+        for j in range(len(predicted_label)):
+            if predicted_label[j] == test_labels[j]:
+                good = good + 1
+            else:
+                bad = bad + 1
+            if predicted_label[j] == 1:
+                if test_labels[j] == 1:
+                    true_pos += 1
+                else:
+                    false_pos += 1
+            elif predicted_label[j] != 1:
+                if test_labels[j] == 1:
+                    false_neg += 1
+    # f_1_score = f_measure(true_pos, false_pos, false_neg, 1.)
+    # f_2_score = f_measure(true_pos, false_pos, false_neg, 2.)
+    # f_05_score = f_measure(true_pos, false_pos, false_neg, 0.5)
+    recall = true_pos / (true_pos + false_neg)
+    precision = true_pos / (true_pos + false_pos)
+    sk_f1_score = m.f1_score(test_labels, predicted_label, average=None)
+    print("RECALL: ", recall, "PRECISION: ", precision, "F1: ", 2*recall*precision/(recall + precision), "ACCURACY: ", good / (good + bad), "SKLEARN_F_1: ", sk_f1_score)
+    print('C= ', C, 'TP= ', true_pos, 'FP= ', false_pos, 'FN= ', false_neg)
+
 
 if __name__ == "__main__":
     # train_multi_svc()
-    grid_search()
+    # grid_search()
+    best_testing()

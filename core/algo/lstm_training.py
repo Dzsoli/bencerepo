@@ -20,7 +20,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def load_data(path='../../../full_data/'):
+def split_data(path='../../../full_data/'):
 
     l_data = np.load(path + 'dX_Y_dataset.npy')
     l_labels = np.load(path + 'dX_Y_labels.npy')
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     lr = 0.042
     num_epochs = 1500
     # batch_size = 512
-    train_loader, test_loader = load_data()
+    train_loader, test_loader = split_data()
 
     # model and optimizer
     model = SimpleLSTM(2, 7, 1).to(models.device)
