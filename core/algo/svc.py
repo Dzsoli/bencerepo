@@ -135,13 +135,16 @@ def train_multi_svc(path='../../../full_data/'):
 
 
 def grid_search(path='../../../full_data/'):
-    C = np.power(10,np.arange(-3, 3, 0.5)).tolist()
+    C = np.power(10, np.arange(-3, 3, 0.5)).tolist()
+    nu = np.arange(1e-3, 1, 0.05).tolist()
     gamma = np.arange(1e-3, 1, 0.05).tolist()
     gamma.append('scale')
     # grid_1 = {'C': loguniform(1e-3, 1e3), 'gamma': loguniform(1e-4, 1e-1), 'kernel': ['rbf']}
     grid_2 = {'C': C, 'gamma': gamma, 'kernel': ['rbf'], 'decision_function_shape': ['ovr', 'ovo']}
+    grid_3 = {'nu': nu, 'gamma': gamma, 'kernel': ['rbf'], 'decision_function_shape': ['ovr', 'ovo']}
     svc = svm.SVC()
-    clf = GridSearchCV(svc, grid_2, n_jobs=7)
+    nu_svc = svm.NuSVC()
+    clf = GridSearchCV(nu_svc, grid_3, n_jobs=4)
 
     train_data, train_labels, test_data, test_labels = split_data(path, "dX")
     clf.fit(train_data, train_labels)
@@ -149,8 +152,9 @@ def grid_search(path='../../../full_data/'):
     sorted(clf.cv_results_.keys())
     results = pd.DataFrame(clf.cv_results_)
     print(clf.best_estimator_)
-    results.to_csv('../../../svm_results/grid2_search.csv')
-
+    if not os.path.exists('../../../svm_results'):
+        os.makedirs('../../../svm_results')
+    results.to_csv('../../../svm_results/grid3_search_nu.csv')
 
 def best_testing(path='../../../full_data/'):
     train_data, train_labels, test_data, test_labels = split_data(path, "dX")

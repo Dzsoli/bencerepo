@@ -10,6 +10,7 @@ import pickle
 from core.common import *
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 feetToMeters = lambda feet: float(feet) * 0.3048
 converters_dict = {'Local_X': feetToMeters,
                    'Local_Y': feetToMeters,

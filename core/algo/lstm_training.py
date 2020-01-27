@@ -20,24 +20,29 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def split_data(path='../../../full_data/'):
+def load_data(features: str, path='../../../full_data/'):
 
-    l_data = np.load(path + 'dX_Y_dataset.npy')
-    l_labels = np.load(path + 'dX_Y_labels.npy')
+    l_data = np.load(path + features + '_dataset.npy')
+    l_labels = np.load(path + features + '_labels.npy')
 
     # quotient for chopping the data
     q = 0.2
 
     # TODO: the window_size and shift (and the N=6) is not in this scope
-    l_data = np.reshape(l_data, (-1, 2, 30))
+
+    window_size = l_data.shape[3]
+    features = l_data.shape[2]
+    N = l_data.shape[1]
+    l_data = np.reshape(l_data, (-1, features, window_size))
 
     # normalize
     l_data = l_data / np.linalg.norm(l_data, axis=0)
-    l_data = np.reshape(l_data, (-1, 6, 2, 30))
+    l_data = np.reshape(l_data, (-1, N, features, window_size))
     # train data
-    train_data = np.reshape(l_data[0:int((1 - q) * l_data.shape[0])], (-1, 2, 30))
+    train_data = np.reshape(l_data[0:int((1 - q) * l_data.shape[0])], (-1, features, window_size))
     train_labels = np.reshape(l_labels[0:int((1 - q) * l_data.shape[0])], (-1, 3))
-    dataset_train = Trajectories(dataset=train_data, labels=train_labels, transform=ToDevice())
+    dataset_train = Trajectories(dataset=train_data, labels=train_labels, featnumb=features, window_size=window_size,
+                                 transform=ToDevice())
     l_train_loader = DataLoader(dataset_train, batch_size=train_data.shape[0], shuffle=True)
 
     # validation data
@@ -47,9 +52,10 @@ def split_data(path='../../../full_data/'):
     # valid_loader = DataLoader(dataset_valid, batch_size=int(q * l_data.shape[0]) + 1, shuffle=True)
 
     # test data
-    test_data = np.reshape(l_data[int((1 - q) * l_data.shape[0]):], (-1, 2, 30))
+    test_data = np.reshape(l_data[int((1 - q) * l_data.shape[0]):], (-1, features, window_size))
     test_labels = np.reshape(l_labels[int((1 - q) * l_data.shape[0]):], (-1, 3))
-    dataset_test = Trajectories(dataset=test_data, labels=test_labels, transform=ToDevice())
+    dataset_test = Trajectories(dataset=test_data, labels=test_labels, featnumb=features, window_size=window_size,
+                                transform=ToDevice())
     l_test_loader = DataLoader(dataset_test, batch_size=test_data.shape[0], shuffle=True)
 
     return l_train_loader, l_test_loader
@@ -69,6 +75,7 @@ def run(l_test_loader, l_train_loader, l_model, l_loss_fn, l_optimizer, l_num_ep
             print("Epoch: ", epoch)
         for i, sample in enumerate(l_train_loader):
             out = l_model(sample['data'])
+            out = out.to(models.device)
             loss = l_loss_fn(out, sample['label'])
 
             l_optimizer.zero_grad()
@@ -133,13 +140,15 @@ def valid(l_model, l_valid_loader, l_loss_fn):
 
 
 if __name__ == '__main__':
-    lr = 0.042
+    lr = 0.043
     num_epochs = 1500
     # batch_size = 512
-    train_loader, test_loader = split_data()
+
+    train_loader, test_loader = load_data('dX_Y')
+    input_dim = train_loader.dataset.featnumb
 
     # model and optimizer
-    model = SimpleLSTM(2, 7, 1).to(models.device)
+    model = SimpleLSTM(input_dim, 7, 1).to(models.device)
     loss_fn = nn.BCELoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=1e-6, momentum=0.9, nesterov=True)
     optimizer_adam = optim.Adam(model.parameters(), lr=lr)
