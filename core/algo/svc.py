@@ -156,6 +156,7 @@ def grid_search(path='../../../full_data/'):
         os.makedirs('../../../svm_results')
     results.to_csv('../../../svm_results/grid3_search_nu.csv')
 
+
 def best_testing(path='../../../full_data/'):
     train_data, train_labels, test_data, test_labels = split_data(path, "dX")
     C = 3.1622776601683795

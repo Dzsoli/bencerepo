@@ -103,21 +103,24 @@ if __name__ == '__main__':
 
             los.append(loss)
 
-        # val_acc, val_err = testing(model, valid_loader)
-        # acc.append(val_acc)
-        # val_error.append(val_err)
+        val_acc, val_err = testing(model, test_loader)
+        acc.append(val_acc)
+        val_error.append(val_err)
 
         model.eval()
         # print('[epoch: {:d}] train_loss: {:.3f}, ({:.1f}s)'.format(epoch, loss.item(), time.time()-tic) )  # pytorch 0.4 and later
 
     plt.plot(los)
     plt.ylabel('Training loss')
+    plt.xlabel('Epoch')
     plt.show()
 
-    # plt.plot(val_error)
-    # plt.ylabel('Validating loss')
-    # plt.show()
-    #
-    # plt.plot(acc)
-    # plt.ylabel('Validating accuracy')
-    # plt.show()
+    plt.plot(val_error)
+    plt.ylabel('Validating loss')
+    plt.xlabel('Epoch')
+    plt.show()
+
+    plt.plot(acc)
+    plt.ylabel('Validating accuracy')
+    plt.xlabel('Epoch')
+    plt.show()
