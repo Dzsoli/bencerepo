@@ -115,17 +115,15 @@ class LSTM2(nn.Module):
 class Encoder(nn.Module):
     def __init__(self, input_dim, hid_dim, n_layers, dropout):
         super(Encoder, self).__init__()
-
         self.hid_dim = hid_dim
         self.n_layers = n_layers
-
-        self.rnn = nn.LSTM(input_dim, hid_dim, n_layers, dropout=dropout)
-
+        self.rnn = nn.LSTM(input_dim, hid_dim, n_layers, dropout=dropout, batch_first=True)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, src):
-        # src = [src len, batch size]
-
+        # src = [src len, batch size] helyett [batch, seq, feature]
+        # embedded = self.dropout(self.embedding(src))
+        # embedded = [src len, batch size, emb dim]
         outputs, (hidden, cell) = self.rnn(src)
 
         # outputs = [src len, batch size, hid dim * n directions]
@@ -140,7 +138,6 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, output_dim, hid_dim, n_layers, dropout):
         super(Decoder, self).__init__()
-
         self.output_dim = output_dim
         self.hid_dim = hid_dim
         self.n_layers = n_layers
@@ -191,7 +188,6 @@ class Decoder(nn.Module):
 class Seq2Seq(nn.Module):
     def __init__(self, encoder, decoder, device):
         super(Seq2Seq, self).__init__()
-
         self.encoder = encoder
         self.decoder = decoder
         self.device = device
@@ -210,13 +206,10 @@ class Seq2Seq(nn.Module):
         batch_size = trg.shape[1]
         trg_len = trg.shape[0]
         trg_size = self.decoder.output_dim
-
         # tensor to store decoder outputs
         outputs = torch.zeros(trg_len, batch_size, trg_size).to(self.device)
-
         # last hidden state of the encoder is used as the initial hidden state of the decoder
         hidden, cell = self.encoder(src)
-
         # first input to the decoder is the <sos> tokens
         input = trg[0, :]
 

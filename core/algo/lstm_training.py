@@ -185,7 +185,7 @@ if __name__ == '__main__':
     num_epochs = 1000
     # batch_size = 512
 
-    train_loader, test_loader = load_data('dX_Y')
+    train_loader, test_loader = load_data('X_Y')
     input_dim = train_loader.dataset.featnumb
 
     # model and optimizer

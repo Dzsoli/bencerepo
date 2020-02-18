@@ -84,12 +84,12 @@ def train_multi_svc(path='../../../full_data/'):
     # test_x = np.abs(test_x)
     classifier = []
     numb = 1e-1
-    for j in range(1, int(1 / numb)):
+    for j in range(1, int(100 / numb)):
         C = 1.0 - j * numb
         # C=C
-        nu = 0.02 + j * numb * 0.02
-        clf = svm.SVC(C=C, kernel='rbf', gamma='scale', decision_function_shape='ovo')
-        # clf = svm.NuSVC(nu=nu, kernel='rbf', gamma='scale', decision_function_shape='ovo')
+        nu = 0.02 + j * numb * 0.05
+        # clf = svm.SVC(C=C, kernel='rbf', gamma='scale', decision_function_shape='ovo')
+        clf = svm.NuSVC(nu=nu, kernel='rbf', gamma='scale', decision_function_shape='ovo')
         print('instantiation is done')
         try:
             clf.fit(train_data, train_labels)
@@ -125,9 +125,9 @@ def train_multi_svc(path='../../../full_data/'):
             precision = true_pos / (true_pos + false_pos)
             sk_f1_score = m.f1_score(test_labels, predicted_label, average=None)
             print("RECALL: ", recall, "PRECISION: ", precision, "ACCURACY: ", good / (good + bad), "SKLEARN_F_1: ", sk_f1_score)
-            print('C= ', C, 'TP= ', true_pos, 'FP= ', false_pos, 'FN= ', false_neg)
+            print('nu= ', nu, 'TP= ', true_pos, 'FP= ', false_pos, 'FN= ', false_neg)
             classifier.append(
-                [clf, C, true_pos, false_neg, false_pos, recall, precision, sk_f1_score])
+                [clf, nu, true_pos, false_neg, false_pos, recall, precision, sk_f1_score])
         except:
             classifier.append(None)
             print('fit infeasible')
@@ -135,43 +135,58 @@ def train_multi_svc(path='../../../full_data/'):
 
 
 def grid_search(path='../../../full_data/'):
-    C = np.power(10, np.arange(-3, 3, 0.5)).tolist()
-    nu = np.arange(1e-3, 1, 0.05).tolist()
+    C = np.power(10, np.arange(-1, 2, 0.05)).tolist()
+    nu = np.arange(1e-3, 1, 0.001).tolist()
     gamma = np.arange(1e-3, 1, 0.05).tolist()
     gamma.append('scale')
     # grid_1 = {'C': loguniform(1e-3, 1e3), 'gamma': loguniform(1e-4, 1e-1), 'kernel': ['rbf']}
     grid_2 = {'C': C, 'gamma': gamma, 'kernel': ['rbf'], 'decision_function_shape': ['ovr', 'ovo']}
-    grid_3 = {'nu': nu, 'gamma': gamma, 'kernel': ['rbf'], 'decision_function_shape': ['ovr', 'ovo']}
+    grid_3 = {'nu': nu, 'gamma': ['scale'], 'kernel': ['rbf'], 'decision_function_shape': ['ovr', 'ovo']}
     svc = svm.SVC()
     nu_svc = svm.NuSVC()
-    clf = GridSearchCV(nu_svc, grid_3, n_jobs=4)
+    clf_nu = GridSearchCV(nu_svc, grid_3, n_jobs=7, return_train_score=True)
+    clf_c = GridSearchCV(svc, grid_2, n_jobs=7, return_train_score=True)
 
     train_data, train_labels, test_data, test_labels = split_data(path, "dX")
-    clf.fit(train_data, train_labels)
+    # clf_nu.fit(train_data, train_labels)
+    clf_c.fit(train_data, train_labels)
 
-    sorted(clf.cv_results_.keys())
-    results = pd.DataFrame(clf.cv_results_)
-    print(clf.best_estimator_)
+    # sorted(clf_nu.cv_results_.keys())
+    # results1 = pd.DataFrame(clf_nu.cv_results_)
+    # if not os.path.exists('../../../svm_results'):
+    #     os.makedirs('../../../svm_results')
+    # results1.to_csv('../../../svm_results/grid3_search_nu.csv')
+
+    sorted(clf_c.cv_results_.keys())
+    results2 = pd.DataFrame(clf_c.cv_results_)
     if not os.path.exists('../../../svm_results'):
         os.makedirs('../../../svm_results')
-    results.to_csv('../../../svm_results/grid3_search_nu.csv')
+    results2.to_csv('../../../svm_results/grid2_search_c_gamma.csv')
+
+    # print(clf_nu.best_estimator_, 'best score: ', clf_nu.best_score_)
+    # best_testing(clf_nu.predict(train_data), test_labels)
+    print(clf_c.best_estimator_, 'best score: ', clf_c.best_score_)
+    best_testing(clf_c.predict(train_data), test_labels)
 
 
-def best_testing(path='../../../full_data/'):
-    train_data, train_labels, test_data, test_labels = split_data(path, "dX")
-    C = 3.1622776601683795
-    degree = 3
-    gamma = 'scale'
-    kernel = 'rbf'
-    svc = svm.SVC(C, kernel, degree, gamma)
-    svc.fit(train_data, train_labels)
-    predicted_label = svc.predict(test_data)
+def best_testing(pred, labels, path='../../../full_data/'):
+    # train_data, train_labels, test_data, test_labels = split_data(path, "dX")
+    # C = 3.1622776601683795
+    # degree = 3
+    # gamma = 'scale'
+    # kernel = 'rbf'
+    # svc = svm.SVC(C, kernel, degree, gamma)
+    # svc.fit(train_data, train_labels)
+    # predicted_label = svc.predict(test_data)
     true_pos = 0
     false_pos = 0
     false_neg = 0
     p = 0.3
     good = 0
     bad = 0
+
+    test_labels = labels
+    predicted_label = pred
 
     if len(test_labels) == len(predicted_label):
         print("dimensions equal")
@@ -195,10 +210,10 @@ def best_testing(path='../../../full_data/'):
     precision = true_pos / (true_pos + false_pos)
     sk_f1_score = m.f1_score(test_labels, predicted_label, average=None)
     print("RECALL: ", recall, "PRECISION: ", precision, "F1: ", 2*recall*precision/(recall + precision), "ACCURACY: ", good / (good + bad), "SKLEARN_F_1: ", sk_f1_score)
-    print('C= ', C, 'TP= ', true_pos, 'FP= ', false_pos, 'FN= ', false_neg)
+    print('TP= ', true_pos, 'FP= ', false_pos, 'FN= ', false_neg)
 
 
 if __name__ == "__main__":
-    # train_multi_svc()
+    train_multi_svc()
     # grid_search()
-    best_testing()
+    # best_testing()
