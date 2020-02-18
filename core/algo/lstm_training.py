@@ -52,8 +52,8 @@ def load_data(features: str, path='../../../full_data/'):
     # valid_loader = DataLoader(dataset_valid, batch_size=int(q * l_data.shape[0]) + 1, shuffle=True)
 
     # test data
-    test_data = np.reshape(l_data[int((1 - q) * l_data.shape[0]):], (-1, features, window_size))
-    test_labels = np.reshape(l_labels[int((1 - q) * l_data.shape[0]):], (-1, 3))
+
+
     dataset_test = Trajectories(dataset=test_data, labels=test_labels, featnumb=features, window_size=window_size,
                                 transform=ToDevice())
     l_test_loader = DataLoader(dataset_test, batch_size=test_data.shape[0], shuffle=True)
@@ -140,11 +140,11 @@ def valid(l_model, l_valid_loader, l_loss_fn):
 
 
 if __name__ == '__main__':
-    lr = 0.043
+    lr = 0.0421
     num_epochs = 1500
     # batch_size = 512
 
-    train_loader, test_loader = load_data('dX_Y')
+    train_loader, test_loader = load_data('X_Y')
     input_dim = train_loader.dataset.featnumb
 
     # model and optimizer
