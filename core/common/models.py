@@ -11,10 +11,6 @@ import random
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = 'cpu'
-teacher_forcing_ratio = 0.5
-SOS_token = 0
-EOS_token = 1
-MAX_LENGTH = 30
 
 
 class SimpleLSTM(nn.Module):
@@ -144,7 +140,7 @@ class Decoder(nn.Module):
 
         # self.embedding = nn.Embedding(output_dim, emb_dim)
 
-        self.rnn = nn.LSTM(output_dim, hid_dim, n_layers, dropout=dropout)
+        self.rnn = nn.LSTM(output_dim, hid_dim, n_layers, dropout=dropout, batch_first=True)
 
         self.fc_out = nn.Linear(hid_dim, output_dim)
 
