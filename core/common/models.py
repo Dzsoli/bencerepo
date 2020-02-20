@@ -24,7 +24,7 @@ class SimpleLSTM(nn.Module):
             hidden_size=hidden_size,
             num_layers=n_layers,
             dropout=0.2,
-            batch_first=True,  # ez jelenti azt hogy az első dimenzióban a batch méret van
+            batch_first=True,  # [batch, seq, feature] ez jelenti azt hogy az első dimenzióban a batch méret van
         )
         self.softmax = nn.Softmax()
         self.linear = nn.Linear(self.hidden_size, 3)
@@ -113,13 +113,19 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.hid_dim = hid_dim
         self.n_layers = n_layers
-        self.rnn = nn.LSTM(input_dim, hid_dim, n_layers, dropout=dropout, batch_first=True)
+        # [batch, seq, feature] <--- if batch_first=True
+        self.rnn = nn.LSTM(input_dim,
+                           hid_dim,
+                           n_layers,
+                           dropout=dropout,
+                           batch_first=False)
+        # input of shape (seq_len, batch, input_size)
+        # output of shape (seq_len, batch, num_directions * hidden_size)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, src):
         # src = [src len, batch size] helyett [batch, seq, feature]
-        # embedded = self.dropout(self.embedding(src))
-        # embedded = [src len, batch size, emb dim]
+
         outputs, (hidden, cell) = self.rnn(src)
 
         # outputs = [src len, batch size, hid dim * n directions]
@@ -140,14 +146,19 @@ class Decoder(nn.Module):
 
         # self.embedding = nn.Embedding(output_dim, emb_dim)
 
-        self.rnn = nn.LSTM(output_dim, hid_dim, n_layers, dropout=dropout, batch_first=True)
-
+        self.rnn = nn.LSTM(output_dim,
+                           hid_dim,
+                           n_layers,
+                           dropout=dropout,
+                           batch_first=False)
+        # input of shape (seq_len, batch, input_size)
+        # output of shape (seq_len, batch, num_directions * hidden_size)
         self.fc_out = nn.Linear(hid_dim, output_dim)
 
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, input, hidden, cell):
-        # input = [batch size]
+        # input = [batch size, feature]
         # hidden = [n layers * n directions, batch size, hid dim]
         # cell = [n layers * n directions, batch size, hid dim]
 
@@ -157,14 +168,14 @@ class Decoder(nn.Module):
 
         input = input.unsqueeze(0)
 
-        # input = [1, batch size]
+        # input = [1, batch size, feature]
 
         # embedded = self.dropout(self.embedding(input))
 
         # embedded = [1, batch size, emb dim]
 
         output, (hidden, cell) = self.rnn(input, (hidden, cell))
-
+        # output = [batch, seq, feature] batchfirst
         # output = [seq len, batch size, hid dim * n directions]
         # hidden = [n layers * n directions, batch size, hid dim]
         # cell = [n layers * n directions, batch size, hid dim]
@@ -194,38 +205,36 @@ class Seq2Seq(nn.Module):
             "Encoder and decoder must have equal number of layers!"
 
     def forward(self, src, trg, teacher_forcing_ratio=0.5):
-        # src = [src len, batch size]
-        # trg = [trg len, batch size]
+        # src = (seq_len, batch, input_size)
+        # trg = [trg len, batch size] <> (seq_len, batch, input_size)
         # teacher_forcing_ratio is probability to use teacher forcing
         # e.g. if teacher_forcing_ratio is 0.75 we use ground-truth inputs 75% of the time
 
-        batch_size = trg.shape[1]
-        trg_len = trg.shape[0]
+        batch_size = src.shape[1]
+        feature = src.shape[2]
+        seq_length = src.shape[0]
         trg_size = self.decoder.output_dim
         # tensor to store decoder outputs
-        outputs = torch.zeros(trg_len, batch_size, trg_size).to(self.device)
+        outputs = torch.zeros(seq_length, batch_size, feature).to(self.device)
         # last hidden state of the encoder is used as the initial hidden state of the decoder
         hidden, cell = self.encoder(src)
-        # first input to the decoder is the <sos> tokens
-        input = trg[0, :]
+        # first input to the decoder is a zero tensor
+        input = torch.zeros(batch_size, feature).to(self.device)
 
-        for t in range(1, trg_len):
+        for t in range(0, seq_length):
             # insert input token embedding, previous hidden and previous cell states
             # receive output tensor (predictions) and new hidden and cell states
             output, hidden, cell = self.decoder(input, hidden, cell)
-
+            # output = [batch size, output dim]
             # place predictions in a tensor holding predictions for each token
             outputs[t] = output
 
             # decide if we are going to use teacher forcing or not
             teacher_force = random.random() < teacher_forcing_ratio
 
-            # get the highest predicted token from our predictions
-            top1 = output.argmax(1)
-
             # if teacher forcing, use actual next token as next input
             # if not, use predicted token
-            input = trg[t] if teacher_force else top1
+            input = trg[t] if teacher_force else output
 
         return outputs
 

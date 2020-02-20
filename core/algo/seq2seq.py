@@ -63,31 +63,24 @@ def count_parameters(l_model):
     return sum(p.numel() for p in l_model.parameters() if p.requires_grad)
 
 
-def train(l_model, l_iterator, l_optimizer, l_criterion, l_clip):
+def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
     l_model.train()
 
     epoch_loss = 0
 
-    for i, batch in enumerate(l_iterator):
-        src = batch.src
-        trg = batch.trg
+    src = l_train_data
+    trg = l_train_data
 
-        l_optimizer.zero_grad()
+    l_optimizer.zero_grad()
 
-        output = l_model(src, trg)
+    output = l_model(src, trg)
 
-        # trg = [trg len, batch size]
-        # output = [trg len, batch size, output dim]
+    # trg = [trg len, batch size]
+    # output = [trg len, batch size, output dim]
+    # todo: reverse the output tensor
+    for i in range(output.shape[1]):
 
-        output_dim = output.shape[-1]
-
-        output = output[1:].view(-1, output_dim)
-        trg = trg[1:].view(-1)
-
-        # trg = [(trg len - 1) * batch size]
-        # output = [(trg len - 1) * batch size, output dim]
-
-        loss = l_criterion(output, trg)
+        loss = l_criterion(output[:, i, :], trg[:, i, :])
 
         loss.backward()
 
@@ -97,37 +90,29 @@ def train(l_model, l_iterator, l_optimizer, l_criterion, l_clip):
 
         epoch_loss += loss.item()
 
-    return epoch_loss / len(l_iterator)
+    return epoch_loss
 
 
-def evaluate(model, iterator, criterion):
+def evaluate(model, valid_data, criterion):
     model.eval()
 
     epoch_loss = 0
 
     with torch.no_grad():
-        for i, batch in enumerate(iterator):
-            src = batch.src
-            trg = batch.trg
 
-            output = model(src, trg, 0)  # turn off teacher forcing
+        src = valid_data
+        trg = valid_data
 
-            # trg = [trg len, batch size]
-            # output = [trg len, batch size, output dim]
+        output = model(src, trg, 0)  # turn off teacher forcing
 
-            output_dim = output.shape[-1]
+        # trg = [trg len, batch size]
+        # output = [trg len, batch size, output dim]
 
-            output = output[1:].view(-1, output_dim)
-            trg = trg[1:].view(-1)
-
-            # trg = [(trg len - 1) * batch size]
-            # output = [(trg len - 1) * batch size, output dim]
-
-            loss = criterion(output, trg)
-
+        for i in range(output.shape[1]):
+            loss = criterion(output[:, i, :], trg[:, i, :])
             epoch_loss += loss.item()
 
-    return epoch_loss / len(iterator)
+    return epoch_loss
 
 
 def epoch_time(start_time, end_time):
@@ -151,6 +136,9 @@ def run():
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
     dec = Decoder(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
     model = Seq2Seq(encoder=enc, decoder=dec, device=device).to(device)
+    train_data = torch.tensor(train_data).transpose(1, 0).transpose(0, 2).float().to(device)
+    test_data = torch.tensor(test_data).transpose(1, 0).transpose(0, 2).float().to(device)
+    valid_data = torch.tensor(valid_data).transpose(1, 0).transpose(0, 2).float().to(device)
     optimizer = optim.Adam(model.parameters())
     criterion = nn.CrossEntropyLoss()
     for epoch in range(N_EPOCHS):
@@ -168,6 +156,15 @@ def run():
             best_valid_loss = valid_loss
             torch.save(model.state_dict(), 'tut1-model.pt')
 
+        print('epoch: ', epoch, 'time: ', epoch_mins, 'mins', epoch_secs,'secs')
+        print('train loss: ', train_loss)
+        print('valid loss: ', valid_loss)
+
+    model.load_state_dict(torch.load('tut1-model.pt'))
+
+    test_loss = evaluate(model, test_data, criterion)
+    print('test loss: ', test_loss)
+
 
 if __name__ == '__main__':
-    load_data('dX_Y')
+    run()
