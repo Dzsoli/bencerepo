@@ -227,7 +227,7 @@ class Seq2Seq(nn.Module):
             output, hidden, cell = self.decoder(input, hidden, cell)
             # output = [batch size, output dim]
             # place predictions in a tensor holding predictions for each token
-            outputs[t] = output
+            outputs[seq_length - t - 1] = output
 
             # decide if we are going to use teacher forcing or not
             teacher_force = random.random() < teacher_forcing_ratio

@@ -45,9 +45,9 @@ def load_data(features: str, path='../../../full_data/'):
     features = l_data.shape[2]
     N = l_data.shape[1]
     l_data = np.reshape(l_data, (-1, features, window_size))
-
+    # TODO: concatenate the N sequences to one
     # normalize
-    l_data = l_data / np.linalg.norm(l_data, axis=0)
+    # l_data = l_data / np.linalg.norm(l_data, axis=0)
     l_data = np.reshape(l_data, (-1, N, features, window_size))
     # train data
     # [number of sequences, number of features, length of sequence]
@@ -78,19 +78,19 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
     # trg = [trg len, batch size]
     # output = [trg len, batch size, output dim]
     # todo: reverse the output tensor
-    for i in range(output.shape[1]):
 
-        loss = l_criterion(output[:, i, :], trg[:, i, :])
+    output_dim = output.shape[-1]
+    output = output.view(-1, output_dim)
+    trg = trg.view(-1, output_dim)
+    loss = l_criterion(output, trg)
 
-        loss.backward()
+    loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(l_model.parameters(), l_clip)
+    torch.nn.utils.clip_grad_norm_(l_model.parameters(), l_clip)
 
-        l_optimizer.step()
+    l_optimizer.step()
 
-        epoch_loss += loss.item()
-
-    return epoch_loss
+    return loss.item()
 
 
 def evaluate(model, valid_data, criterion):
@@ -107,12 +107,12 @@ def evaluate(model, valid_data, criterion):
 
         # trg = [trg len, batch size]
         # output = [trg len, batch size, output dim]
+        output_dim = output.shape[-1]
+        output = output.view(-1, output_dim)
+        trg = trg.view(-1, output_dim)
+        loss = criterion(output, trg)
 
-        for i in range(output.shape[1]):
-            loss = criterion(output[:, i, :], trg[:, i, :])
-            epoch_loss += loss.item()
-
-    return epoch_loss
+    return loss.item()
 
 
 def epoch_time(start_time, end_time):
@@ -123,14 +123,14 @@ def epoch_time(start_time, end_time):
 
 
 def run():
-    N_EPOCHS = 10
+    N_EPOCHS = 1000
     CLIP = 1
 
     best_valid_loss = float('inf')
 
     N, feature_dim, seq_length, train_data, test_data, valid_data = load_data('dX_Y')
-    hidden_dim = 7
-    number_of_layers = 1
+    hidden_dim = 5
+    number_of_layers = 2
     dropout_enc = 0.5
     dropout_dec = 0.5
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
@@ -140,7 +140,8 @@ def run():
     test_data = torch.tensor(test_data).transpose(1, 0).transpose(0, 2).float().to(device)
     valid_data = torch.tensor(valid_data).transpose(1, 0).transpose(0, 2).float().to(device)
     optimizer = optim.Adam(model.parameters())
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.MSELoss()
     for epoch in range(N_EPOCHS):
 
         start_time = time.time()
