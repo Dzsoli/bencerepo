@@ -36,7 +36,7 @@ def load_data(features: str, path='../../../full_data/'):
 
     l_data = np.load(path + features + '_dataset.npy')
     # l_labels = np.load(path + features + '_labels.npy')
-    # quotient for chopping the data
+    # quotient for split the data
     q = 0.1
 
     # TODO: the window_size and shift (and the N=6) is not in this scope
@@ -47,13 +47,15 @@ def load_data(features: str, path='../../../full_data/'):
     l_data = np.reshape(l_data, (-1, features, window_size))
     # TODO: concatenate the N sequences to one
     # normalize
+
     # l_data = l_data / np.linalg.norm(l_data, axis=0)
-    l_data = np.reshape(l_data, (-1, N, features, window_size))
+    # l_data = np.reshape(l_data, (-1, N, features, window_size))
+
     # train data
     # [number of sequences, number of features, length of sequence]
     V = l_data.shape[0]
     train_data = np.reshape(l_data[0:int((1 - 2*q) * V)], (-1, features, window_size))
-    test_data = np.reshape(l_data[int((1 - 2*q) * V):int(1 - q) * V], (-1, features, window_size))
+    test_data = np.reshape(l_data[int((1 - 2*q) * V):int((1 - q) * V)], (-1, features, window_size))
     valid_data = np.reshape(l_data[int((1 - q) * V):], (-1, features, window_size))
     # train_labels = np.reshape(l_labels[0:int((1 - q) * l_data.shape[0])], (-1, 3))
     return N, features, window_size, train_data, test_data, valid_data
@@ -71,6 +73,7 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
     src = l_train_data
     trg = l_train_data
 
+
     l_optimizer.zero_grad()
 
     output = l_model(src, trg)
@@ -86,7 +89,7 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
 
     loss.backward()
 
-    torch.nn.utils.clip_grad_norm_(l_model.parameters(), l_clip)
+    # torch.nn.utils.clip_grad_norm_(l_model.parameters(), l_clip)
 
     l_optimizer.step()
 
@@ -123,14 +126,14 @@ def epoch_time(start_time, end_time):
 
 
 def run():
-    N_EPOCHS = 1000
+    N_EPOCHS = 5000
     CLIP = 1
 
     best_valid_loss = float('inf')
 
-    N, feature_dim, seq_length, train_data, test_data, valid_data = load_data('dX_Y')
-    hidden_dim = 5
-    number_of_layers = 2
+    N, feature_dim, seq_length, train_data, test_data, valid_data = load_data('X_Y')
+    hidden_dim = 60
+    number_of_layers = 4
     dropout_enc = 0.5
     dropout_dec = 0.5
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
@@ -139,6 +142,12 @@ def run():
     train_data = torch.tensor(train_data).transpose(1, 0).transpose(0, 2).float().to(device)
     test_data = torch.tensor(test_data).transpose(1, 0).transpose(0, 2).float().to(device)
     valid_data = torch.tensor(valid_data).transpose(1, 0).transpose(0, 2).float().to(device)
+    # normalize the data sample wise
+    # every sequence is divided by the max value of the sequence by every feature
+    train_data = train_data / train_data.max(dim=1, keepdim=True)[0]
+    test_data = test_data / test_data.max(dim=1, keepdim=True)[0]
+    valid_data = valid_data / valid_data.max(dim=1, keepdim=True)[0]
+
     optimizer = optim.Adam(model.parameters())
     # criterion = nn.CrossEntropyLoss()
     criterion = nn.MSELoss()
@@ -155,13 +164,13 @@ def run():
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), 'tut1-model.pt')
+            torch.save(model.state_dict(), 'hid60_layer4_epoch5000.pt')
 
         print('epoch: ', epoch, 'time: ', epoch_mins, 'mins', epoch_secs,'secs')
         print('train loss: ', train_loss)
         print('valid loss: ', valid_loss)
 
-    model.load_state_dict(torch.load('tut1-model.pt'))
+    model.load_state_dict(torch.load('hid60_layer4_epoch5000.pt'))
 
     test_loss = evaluate(model, test_data, criterion)
     print('test loss: ', test_loss)
