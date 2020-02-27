@@ -31,6 +31,10 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
+path = os.path.join(RESULTS_PATH, "seq2seq_lstm")
+if not os.path.exists(path):
+    os.makedirs(path)
+
 
 def load_data(features: str, q, path='../../../full_data/'):
 
@@ -94,7 +98,7 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
     return loss.item()
 
 
-def evaluate(model, valid_data, criterion, test=False):
+def evaluate(model, valid_data, criterion, test=False, dir=None):
     model.eval()
 
     epoch_loss = 0
@@ -114,8 +118,8 @@ def evaluate(model, valid_data, criterion, test=False):
         loss = criterion(output, trg)
 
         if test:
-            torch.save(trg)
-            torch.save(output)
+            torch.save(trg, os.path.join(path, dir) + '/targer.pt')
+            torch.save(output, os.path.join(path, dir) + '/output.pt')
 
     return loss.item()
 
@@ -124,16 +128,17 @@ def epoch_time(start_time, end_time):
     elapsed_time = end_time - start_time
     elapsed_mins = int(elapsed_time / 60)
     elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
+    # TODO valami nem jó a milisecundumokkal
     elapsed_milisecs = int((elapsed_time - (elapsed_mins * 60) - (elapsed_secs * 60)) * 1000)
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
 def run():
-    N_EPOCHS = 5000
+    N_EPOCHS = 3
     CLIP = 1
     #data split ratio
     q = 0.1
-    path = "../../../results/seq2seq_lstm/"
+    # path = "../../../results/seq2seq_lstm/"
 
     best_valid_loss = float('inf')
     best_epoch_number = 0
@@ -143,6 +148,7 @@ def run():
     number_of_layers = 3
     dropout_enc = 0.5
     dropout_dec = 0.5
+    directory = 'hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_epoch' + str(N_EPOCHS)
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
     dec = Decoder(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
     model = Seq2Seq(encoder=enc, decoder=dec, device=device).to(device)
@@ -171,8 +177,9 @@ def run():
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            file_name = path + 'hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_epoch' + str(N_EPOCHS) +\
-                        '_q' + str(q) + 'pt'
+            if not os.path.exists(os.path.join(path, directory)):
+                os.makedirs(os.path.join(path, directory))
+            file_name = os.path.join(path, directory) + '/model_parameters.pt'
             torch.save(model.state_dict(), file_name)
             best_epoch_number = epoch
 
@@ -182,7 +189,7 @@ def run():
 
     model.load_state_dict(torch.load(file_name))
 
-    test_loss = evaluate(model, test_data, criterion, test=True)
+    test_loss = evaluate(model, test_data, criterion, test=True, dir=directory)
     print('best epoch number: ', best_epoch_number)
     print('best valid loss: ', best_valid_loss)
     print('test loss: ', test_loss)
