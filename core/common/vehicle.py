@@ -10,6 +10,8 @@ import pickle
 from core.common import *
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = 'cpu'
+
 feetToMeters = lambda feet: float(feet) * 0.3048
 converters_dict = {'Local_X': feetToMeters,
                    'Local_Y': feetToMeters,
@@ -33,6 +35,9 @@ class VehicleDataset(Dataset):
         self.root_dir = root_dir
         self.transform = transform
         self.vehicle_objects = None
+        self.left_iter = None
+        self.right_iter = None
+        self.keep_iter = None
 
     def __len__(self):
         """returns with all the number of frames of the dataset"""
@@ -68,7 +73,7 @@ class VehicleDataset(Dataset):
 
 class Trajectories(Dataset):
 
-    def __init__(self, left=None, right=None, keep=None, window_size=None, shift=None,
+    def __init__(self, left=None, right=None, keep=None, window_size=None, shift=None, featnumb=None,
                  csv_file=None, root_dir=None, transform=None, data=None, dataset=None, labels=None):
 
         if csv_file is not None:
@@ -80,6 +85,7 @@ class Trajectories(Dataset):
         self.keep = keep
         self.window_size = window_size
         self.shift = shift
+        self.featnumb = featnumb
         self.root_dir = "../../../full_data/"
         self.transform = transform
         self.vehicle_objects = None
@@ -165,10 +171,10 @@ class Trajectories(Dataset):
         np.save(path + 'right.npy', self.right)
         np.save(path + 'keep.npy', self.keep)
 
-    def save_np_dataset_labels(self):
+    def save_np_dataset_labels(self, name):
         path = self.root_dir
-        np.save(path + 'dataset.npy', self.dataset)
-        np.save(path + 'labels.npy', self.labels)
+        np.save(path + name + '_dataset.npy', self.dataset)
+        np.save(path + name + '_labels.npy', self.labels)
 
 
 class VehicleData:
@@ -205,6 +211,8 @@ class VehicleData:
         # mean, variance, changes or not?, frame id
         self.labels = None
 
+        self.indicator = None
+
     def __getitem__(self, frame_number):
         item = []
         # returns a numpy array with features corresponding to a specific frame number. The first frame is the zeroth.
@@ -225,6 +233,20 @@ class VehicleData:
                 l_change.append([0, self.frames[i + 1]])
         l_change = np.array(l_change)
         self.set_change_lane(l_change)
+
+    def lane_change_indicator(self):
+        j = 0
+        indicator = 0
+        index = 0
+
+        while (j < self.size -1) & (index == 0):
+            difference = self.lane_id[j + 1] - self.lane_id[j]
+            if difference != 0:
+                index = j
+                indicator = difference
+            j = j + 1
+        self.indicator = [index, indicator]
+        return self.indicator
 
 
 class ToDevice(object):
