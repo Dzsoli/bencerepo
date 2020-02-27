@@ -32,12 +32,10 @@ torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
 
-def load_data(features: str, path='../../../full_data/'):
+def load_data(features: str, q, path='../../../full_data/'):
 
     l_data = np.load(path + features + '_dataset.npy')
     # l_labels = np.load(path + features + '_labels.npy')
-    # quotient for split the data
-    q = 0.15
 
     # TODO: the window_size and shift (and the N=6) is not in this scope
 
@@ -96,7 +94,7 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
     return loss.item()
 
 
-def evaluate(model, valid_data, criterion):
+def evaluate(model, valid_data, criterion, test=False):
     model.eval()
 
     epoch_loss = 0
@@ -115,6 +113,10 @@ def evaluate(model, valid_data, criterion):
         trg = trg.view(-1, output_dim)
         loss = criterion(output, trg)
 
+        if test:
+            torch.save(trg)
+            torch.save(output)
+
     return loss.item()
 
 
@@ -127,13 +129,16 @@ def epoch_time(start_time, end_time):
 
 
 def run():
-    N_EPOCHS = 10000
+    N_EPOCHS = 5000
     CLIP = 1
+    #data split ratio
+    q = 0.1
+    path = "../../../results/seq2seq_lstm/"
 
     best_valid_loss = float('inf')
     best_epoch_number = 0
 
-    N, feature_dim, seq_length, train_data, test_data, valid_data = load_data('X_Y')
+    N, feature_dim, seq_length, train_data, test_data, valid_data = load_data('X_Y', q=q)
     hidden_dim = 10
     number_of_layers = 3
     dropout_enc = 0.5
@@ -166,16 +171,18 @@ def run():
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), 'hid15_layer2_epoch20000.pt')
+            file_name = path + 'hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_epoch' + str(N_EPOCHS) +\
+                        '_q' + str(q) + 'pt'
+            torch.save(model.state_dict(), file_name)
             best_epoch_number = epoch
 
         print('epoch: ', epoch, 'time: ', epoch_mins, 'mins', epoch_secs,'secs', epoch_milisecs, 'mili secs')
         print('train loss: ', train_loss)
         print('valid loss: ', valid_loss)
 
-    model.load_state_dict(torch.load('hid15_layer2_epoch20000.pt'))
+    model.load_state_dict(torch.load(file_name))
 
-    test_loss = evaluate(model, test_data, criterion)
+    test_loss = evaluate(model, test_data, criterion, test=True)
     print('best epoch number: ', best_epoch_number)
     print('best valid loss: ', best_valid_loss)
     print('test loss: ', test_loss)
