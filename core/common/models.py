@@ -218,8 +218,10 @@ class Seq2Seq(nn.Module):
         outputs = torch.zeros(seq_length, batch_size, feature).to(self.device)
         # last hidden state of the encoder is used as the initial hidden state of the decoder
         hidden, cell = self.encoder(src)
-        # first input to the decoder is a zero tensor
-        input = torch.zeros(batch_size, feature).to(self.device)
+        # first input to the decoder is a tensor of 0.5 values
+        # input = torch.ones(batch_size, feature).to(self.device) / 2
+
+        input = trg[seq_length - 1]
 
         for t in range(0, seq_length):
             # insert input token embedding, previous hidden and previous cell states
@@ -234,7 +236,7 @@ class Seq2Seq(nn.Module):
 
             # if teacher forcing, use actual next token as next input
             # if not, use predicted token
-            input = trg[t] if teacher_force else output
+            input = trg[seq_length - t - 2] if teacher_force else output
 
         return outputs
 

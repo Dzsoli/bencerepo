@@ -37,7 +37,7 @@ def load_data(features: str, path='../../../full_data/'):
     l_data = np.load(path + features + '_dataset.npy')
     # l_labels = np.load(path + features + '_labels.npy')
     # quotient for split the data
-    q = 0.1
+    q = 0.15
 
     # TODO: the window_size and shift (and the N=6) is not in this scope
 
@@ -76,7 +76,7 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
 
     l_optimizer.zero_grad()
 
-    output = l_model(src, trg)
+    output = l_model(src, trg, 0.5)
 
     # trg = [trg len, batch size]
     # output = [trg len, batch size, output dim]
@@ -122,18 +122,20 @@ def epoch_time(start_time, end_time):
     elapsed_time = end_time - start_time
     elapsed_mins = int(elapsed_time / 60)
     elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
-    return elapsed_mins, elapsed_secs
+    elapsed_milisecs = int((elapsed_time - (elapsed_mins * 60) - (elapsed_secs * 60)) * 1000)
+    return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
 def run():
-    N_EPOCHS = 5000
+    N_EPOCHS = 10000
     CLIP = 1
 
     best_valid_loss = float('inf')
+    best_epoch_number = 0
 
     N, feature_dim, seq_length, train_data, test_data, valid_data = load_data('X_Y')
-    hidden_dim = 60
-    number_of_layers = 4
+    hidden_dim = 10
+    number_of_layers = 3
     dropout_enc = 0.5
     dropout_dec = 0.5
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
@@ -160,19 +162,22 @@ def run():
 
         end_time = time.time()
 
-        epoch_mins, epoch_secs = epoch_time(start_time, end_time)
+        epoch_mins, epoch_secs, epoch_milisecs = epoch_time(start_time, end_time)
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), 'hid60_layer4_epoch5000.pt')
+            torch.save(model.state_dict(), 'hid15_layer2_epoch20000.pt')
+            best_epoch_number = epoch
 
-        print('epoch: ', epoch, 'time: ', epoch_mins, 'mins', epoch_secs,'secs')
+        print('epoch: ', epoch, 'time: ', epoch_mins, 'mins', epoch_secs,'secs', epoch_milisecs, 'mili secs')
         print('train loss: ', train_loss)
         print('valid loss: ', valid_loss)
 
-    model.load_state_dict(torch.load('hid60_layer4_epoch5000.pt'))
+    model.load_state_dict(torch.load('hid15_layer2_epoch20000.pt'))
 
     test_loss = evaluate(model, test_data, criterion)
+    print('best epoch number: ', best_epoch_number)
+    print('best valid loss: ', best_valid_loss)
     print('test loss: ', test_loss)
 
 
