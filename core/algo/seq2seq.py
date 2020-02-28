@@ -8,18 +8,17 @@ import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 from torchvision import transforms, utils
 
-from torch.nn import functional as F
-from torch.autograd import Variable
-from torch import optim
-import torch.nn as nn
-from sklearn import metrics as m
-import random
-import math
+# import math
 import time
 from core.utils import *
 from core import common
 
 import warnings
+
+from core.utils import *
+
+# from skimage import io, transform
+# from torchvision import transforms, utils
 warnings.filterwarnings("ignore")
 
 
@@ -134,7 +133,7 @@ def epoch_time(start_time, end_time):
 
 
 def run():
-    N_EPOCHS = 3
+    N_EPOCHS = 300
     CLIP = 1
     #data split ratio
     q = 0.1
@@ -164,6 +163,7 @@ def run():
     optimizer = optim.Adam(model.parameters())
     # criterion = nn.CrossEntropyLoss()
     criterion = nn.MSELoss()
+    # criterion = nn.KLDivLoss()
     for epoch in range(N_EPOCHS):
 
         start_time = time.time()
