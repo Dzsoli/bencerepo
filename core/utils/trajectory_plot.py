@@ -16,7 +16,7 @@ def plot_target_pred(target, prediction):
 
     fig = plt.figure()
     plt.plot(y_target, x_target)
-    plt.plot(y_pred, x_pred)
+    # plt.plot(y_pred, x_pred)
     plt.show()
     del fig
 
@@ -31,8 +31,8 @@ def plot_target_pred(target, prediction):
 
 def run():
     print(RESULTS_PATH)
-    predictions = np.array(torch.load(RESULTS_PATH + '\seq2seq_lstm\hid10_layer3_epoch5' + '/output.pt'))
-    targets = np.array(torch.load(RESULTS_PATH + '\seq2seq_lstm\hid10_layer3_epoch5' + '/target.pt'))
+    predictions = np.array(torch.load(RESULTS_PATH + '\seq2seq_lstm\hid10_layer3_epoch6000' + '/output.pt').cpu())
+    targets = np.array(torch.load(RESULTS_PATH + '\seq2seq_lstm\hid10_layer3_epoch6000' + '/target.pt').cpu())
     predictions = np.transpose(predictions, (1, 0, 2))
     targets = np.transpose(targets, (1, 0, 2))
     for trg, pred in zip(targets, predictions):

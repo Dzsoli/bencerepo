@@ -165,6 +165,7 @@ def run():
     # criterion = nn.CrossEntropyLoss()
     criterion = nn.MSELoss()
     # criterion = nn.KLDivLoss()
+    print(device)
     for epoch in range(N_EPOCHS):
 
         start_time = time.time()

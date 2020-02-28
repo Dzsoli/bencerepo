@@ -9,7 +9,7 @@ from typing import Dict
 from core.common import *
 
 
-def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dict[str, Trajectories]:
+def preprocess_for_classification(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dict[str, Trajectories]:
     vehicle_objects = raw_dataset.vehicle_objects
     number = 0
     number_left = 0
@@ -18,8 +18,8 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dic
     right_iter = []
     keep_iter = []
     total_idx = 0
-    number_of_features = 3
-    features = np.zeros((number_of_features, window_size))
+    # number_of_features = 3
+    # features = np.zeros((number_of_features, window_size))
 
     # New variables for feature extraction
     delta_X = np.zeros(window_size)
@@ -183,6 +183,24 @@ def preprocess(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dic
             "dX_V_A": dX_V_A_traject}
 
 
+def preprocess_for_regression(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dict[str, Trajectories]:
+    vehicle_objects = raw_dataset.vehicle_objects
+    number = 0
+    number_left = 0
+    number_right = 0
+    left_iter = []
+    right_iter = []
+    keep_iter = []
+    total_idx = 0
+
+    # New variables for feature extraction
+    delta_X = np.zeros(window_size)
+    X = np.zeros(window_size)
+    Y = np.zeros(window_size)
+    V = np.zeros(window_size)
+    A = np.zeros(window_size)
+
+
 def run():
     i_80 = "../../../full_data/i-80.csv"
     us_101 = "../../../full_data/us-101.csv"
@@ -191,10 +209,10 @@ def run():
     # print(raw_dataset.vehicle_objects[0].lane_id, raw_dataset.vehicle_objects[1].lane_id)
     window_size = 30
     shift = 5
-    dict_trajectories_1 = preprocess(raw_dataset_1, window_size, shift)
+    dict_trajectories_1 = preprocess_for_classification(raw_dataset_1, window_size, shift)
     raw_dataset_2 = VehicleDataset(i_80)
     raw_dataset_2.create_vehicle_objects()
-    dict_trajectories_2 = preprocess(raw_dataset_2, window_size, shift)
+    dict_trajectories_2 = preprocess_for_classification(raw_dataset_2, window_size, shift)
     for key in dict_trajectories_1:
         traject = dict_trajectories_1[key] + dict_trajectories_2[key]
         traject.create_dataset()
