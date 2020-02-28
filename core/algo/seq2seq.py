@@ -111,14 +111,16 @@ def evaluate(model, valid_data, criterion, test=False, dir=None):
 
         # trg = [trg len, batch size]
         # output = [trg len, batch size, output dim]
-        output_dim = output.shape[-1]
+        shape = output.shape
+        output_dim = shape[-1]
         output = output.view(-1, output_dim)
         trg = trg.view(-1, output_dim)
         loss = criterion(output, trg)
 
         if test:
-            torch.save(trg, os.path.join(path, dir) + '/targer.pt')
-            torch.save(output, os.path.join(path, dir) + '/output.pt')
+            torch.save(trg.view(shape), os.path.join(path, dir) + '/target.pt')
+            torch.save(output.view(shape), os.path.join(path, dir) + '/output.pt')
+            print(output.shape)
 
     return loss.item()
 
@@ -127,13 +129,12 @@ def epoch_time(start_time, end_time):
     elapsed_time = end_time - start_time
     elapsed_mins = int(elapsed_time / 60)
     elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
-    # TODO valami nem jó a milisecundumokkal
-    elapsed_milisecs = int((elapsed_time - (elapsed_mins * 60) - (elapsed_secs * 60)) * 1000)
+    elapsed_milisecs = int((elapsed_time - elapsed_mins * 60 - elapsed_secs) * 1000)
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
 def run():
-    N_EPOCHS = 300
+    N_EPOCHS = 6000
     CLIP = 1
     #data split ratio
     q = 0.1
