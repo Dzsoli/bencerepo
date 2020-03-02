@@ -16,7 +16,9 @@ def plot_target_pred(target, prediction):
 
     fig = plt.figure()
     plt.plot(y_target, x_target)
-    # plt.plot(y_pred, x_pred)
+    plt.gca().set_aspect("equal")
+    plt.plot(y_pred, x_pred)
+
     plt.show()
     del fig
 

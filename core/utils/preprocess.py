@@ -183,7 +183,7 @@ def preprocess_for_classification(raw_dataset: VehicleDataset, window_size: int,
             "dX_V_A": dX_V_A_traject}
 
 
-def preprocess_for_regression(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dict[str, Trajectories]:
+def preprocess_for_regression(raw_dataset: VehicleDataset, window_size: int) -> Dict[str, Trajectories]:
     vehicle_objects = raw_dataset.vehicle_objects
     number = 0
     number_left = 0
@@ -199,6 +199,33 @@ def preprocess_for_regression(raw_dataset: VehicleDataset, window_size: int, shi
     Y = np.zeros(window_size)
     V = np.zeros(window_size)
     A = np.zeros(window_size)
+    # New containers for features
+    # N = int(window_size / shift)
+    #
+    for idx, l_vehicle in enumerate(vehicle_objects):
+        # TODO: Az iterátorokat tagfüggvény hozza létre
+        if window_size > l_vehicle.size:
+            continue
+        # lane_change_idx, labels = lane_change_to_idx(vehicle)
+        if l_vehicle.lane_change_indicator() is None:
+            continue
+        else:
+            lane_change_idx, indicator = l_vehicle.indicator
+        if lane_change_idx > 3 * window_size:
+            # print(vehicle.id)
+            if indicator == 1:
+                number_right += 1
+                right_iter.append(idx)
+            if indicator == -1:
+                number_left += 1
+                left_iter.append(idx)
+        if lane_change_idx == 0:
+            keep_iter.append(idx)
+            number += 1
+
+    raw_dataset.left_iter = left_iter
+    raw_dataset.right_iter = right_iter
+    raw_dataset.keep_iter = keep_iter
 
 
 def run():
