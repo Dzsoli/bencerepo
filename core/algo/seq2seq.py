@@ -133,22 +133,24 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
-def run():
-    N_EPOCHS = 6000
-    CLIP = 1
+def run(N_EPOCHS = 6000, CLIP = 1, q = 0.1, hidden_dim = 10, number_of_layers = 3, dropout_enc = 0.5,
+        dropout_dec = 0.5):
+    # N_EPOCHS = 300
+    # CLIP = 1
     #data split ratio
-    q = 0.1
+    # q = 0.1
     # path = "../../../results/seq2seq_lstm/"
 
     best_valid_loss = float('inf')
     best_epoch_number = 0
 
     N, feature_dim, seq_length, train_data, test_data, valid_data = load_data('X_Y', q=q)
-    hidden_dim = 10
-    number_of_layers = 3
-    dropout_enc = 0.5
-    dropout_dec = 0.5
-    directory = 'hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_epoch' + str(N_EPOCHS)
+    # hidden_dim = 10
+    # number_of_layers = 3
+    # dropout_enc = 0.5
+    # dropout_dec = 0.5
+    directory = 'hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_drop' + \
+                str(dropout_dec).replace('.', '') + '_epoch' + str(N_EPOCHS)
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
     dec = Decoder(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
     model = Seq2Seq(encoder=enc, decoder=dec, device=device).to(device)
