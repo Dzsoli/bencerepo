@@ -132,7 +132,8 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
-def run():
+def run(N_EPOCHS = 6000, CLIP = 1, q = 0.1, hidden_dim = 10, number_of_layers = 3, dropout_enc = 0.5,
+        dropout_dec = 0.5):
     N_EPOCHS = 300
     CLIP = 1
     #data split ratio
@@ -147,7 +148,8 @@ def run():
     number_of_layers = 3
     dropout_enc = 0.5
     dropout_dec = 0.5
-    directory = 'hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_epoch' + str(N_EPOCHS)
+    directory = 'hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_drop' + \
+                str(dropout_dec).replace('.', '') + '_epoch' + str(N_EPOCHS)
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
     dec = Decoder(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
     model = Seq2Seq(encoder=enc, decoder=dec, device=device).to(device)
