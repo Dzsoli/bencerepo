@@ -32,7 +32,7 @@ for lay in layers:
     for hid in hidden:
         for drop in dropout:
             seq2seq.run(hidden_dim=hid,
-                        number_of_layers= lay,
+                        number_of_layers=lay,
                         dropout_enc=drop, dropout_dec=drop)
 
 
