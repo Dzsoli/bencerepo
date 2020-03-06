@@ -133,8 +133,8 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
-def run(N_EPOCHS = 6000, CLIP = 1, q = 0.1, hidden_dim = 10, number_of_layers = 3, dropout_enc = 0.5,
-        dropout_dec = 0.5):
+def run(N_EPOCHS=5000, CLIP=1, q=0.1, hidden_dim=5, number_of_layers=1, dropout_enc=0.5,
+        dropout_dec=0.5):
     # N_EPOCHS = 300
     # CLIP = 1
     #data split ratio
