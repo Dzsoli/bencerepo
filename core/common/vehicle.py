@@ -176,7 +176,6 @@ class Trajectories(Dataset):
         path = self.root_dir
         if mode is not None:
             name = name + mode
-        print(path + name)
         np.save(path + "/" + name + '_dataset.npy', self.dataset)
         np.save(path + "/" + name + '_labels.npy', self.labels)
 
