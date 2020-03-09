@@ -7,7 +7,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import pickle
-from core.common import *
+# from core.common import *
+from core import common
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = 'cpu'
@@ -86,7 +87,7 @@ class Trajectories(Dataset):
         self.window_size = window_size
         self.shift = shift
         self.featnumb = featnumb
-        self.root_dir = "../../../full_data/"
+        self.root_dir = common.FULLDATA_PATH
         self.transform = transform
         self.vehicle_objects = None
         # TODO: dataset, labeling
@@ -171,8 +172,11 @@ class Trajectories(Dataset):
         np.save(path + 'right.npy', self.right)
         np.save(path + 'keep.npy', self.keep)
 
-    def save_np_dataset_labels(self, name):
+    def save_np_dataset_labels(self, name, mode=None):
         path = self.root_dir
+        if mode is not None:
+            name = name + mode
+        print(path)
         np.save(path + name + '_dataset.npy', self.dataset)
         np.save(path + name + '_labels.npy', self.labels)
 
