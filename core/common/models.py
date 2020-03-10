@@ -280,3 +280,8 @@ class CNN(nn.Module):
         output = self.fc2(output)
         output = self.soft(output)
         return output
+
+
+def custom_loss(output, target):
+    loss = None
+    return loss
