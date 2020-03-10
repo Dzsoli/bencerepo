@@ -31,8 +31,11 @@ def plot_target_pred(target, prediction):
 
 def run():
     print(RESULTS_PATH)
-    predictions = np.array(torch.load(RESULTS_PATH + '\seq2seq_lstm\hid5_layer1_drop05_epoch5000' + '/output.pt', map_location='cpu'))
-    targets = np.array(torch.load(RESULTS_PATH + '\seq2seq_lstm\hid5_layer1_drop05_epoch5000' + '/target.pt', map_location='cpu'))
+    print()
+    local_path = RESULTS_PATH + '\seq2seq_lstm\\full__hid10_layer3_drop05_epoch20000'
+
+    predictions = np.array(torch.load(local_path + '/output.pt', map_location='cpu'))
+    targets = np.array(torch.load(local_path + '/target.pt', map_location='cpu'))
     predictions = np.transpose(predictions, (1, 0, 2))
     targets = np.transpose(targets, (1, 0, 2))
     for trg, pred in zip(targets, predictions):
