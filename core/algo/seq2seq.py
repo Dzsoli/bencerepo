@@ -167,6 +167,7 @@ def run(N_EPOCHS=20000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropou
     # criterion = nn.CrossEntropyLoss()
     criterion = nn.MSELoss()
     # criterion = nn.KLDivLoss()
+    print(device)
     for epoch in range(N_EPOCHS):
 
         start_time = time.time()

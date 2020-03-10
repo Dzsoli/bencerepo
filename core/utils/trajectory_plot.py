@@ -13,10 +13,11 @@ def plot_target_pred(target, prediction):
 
     x_pred = [t[0] for t in prediction]
     y_pred = [t[1] for t in prediction]
-
     fig = plt.figure()
     plt.plot(y_target, x_target)
+    plt.gca().set_aspect("equal")
     plt.plot(y_pred, x_pred)
+
     plt.show()
     del fig
 
@@ -38,8 +39,11 @@ def run():
     targets = np.array(torch.load(local_path + '/target.pt', map_location='cpu'))
     predictions = np.transpose(predictions, (1, 0, 2))
     targets = np.transpose(targets, (1, 0, 2))
+    i = 0
     for trg, pred in zip(targets, predictions):
-        plot_target_pred(trg, pred)
+        if i > -1:
+            plot_target_pred(trg, pred)
+        i += 1
     print(predictions.shape, targets.shape)
 
 
