@@ -282,6 +282,7 @@ class CNN(nn.Module):
         return output
 
 
-def custom_loss(output, target):
-    loss = None
+def weighted_MSEloss(output, target, const=0):
+    loss = torch.mean((output - target) ** 2)
+    loss = loss + const * torch.mean((output[0, :, :] - target[0, :, :]) ** 2)
     return loss
