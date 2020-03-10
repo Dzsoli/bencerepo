@@ -282,8 +282,19 @@ class CNN(nn.Module):
         return output
 
 
-def weighted_MSEloss(output, target, const=0):
+def weighted_MSEloss(output, target, const=10):
     loss = torch.mean((output - target) ** 2)
     loss = loss + const * torch.mean((output[0, :, :] - target[0, :, :]) ** 2) \
            + const * torch.mean((output[-1, :, :] - target[-1, :, :]) ** 2)
     return loss
+
+
+def extended_MSEloss(output, target):
+    output_dim = output.shape[-1]
+    loss1 = nn.MSELoss(output, target)
+    # loss2 = nn.MSELoss(output.view(-1, output_dim), target.view(-1, output_dim))
+    d_output = (output[1:, :, :] - output[0:-1, :, :]).view(-1, output_dim)
+    d_target = (target[1:, :, :] - target[0:-1, :, :]).view(-1, output_dim)
+    # loss2 = nn.MSELoss(d_output, d_target)
+    # return (loss1 + loss2) / 2
+    return loss1

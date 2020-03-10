@@ -79,15 +79,16 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
 
     output = l_model(src, trg, 0.5)
 
-    # trg = [trg len, batch size]
     # output = [trg len, batch size, output dim]
     # todo: reverse the output tensor
 
     output_dim = output.shape[-1]
-    output = output.view(-1, output_dim)
-    trg = trg.view(-1, output_dim)
+    # output = output.view(-1, output_dim)
+    # trg = trg.view(-1, output_dim)
     loss = l_criterion(output, trg)
-
+    d_output = (output[1:, :, :] - output[0:-1, :, :]).view(-1, output_dim)
+    d_target = (trg[1:, :, :] - trg[0:-1, :, :]).view(-1, output_dim)
+    loss = loss + l_criterion(d_output, d_target)
     loss.backward()
 
     # torch.nn.utils.clip_grad_norm_(l_model.parameters(), l_clip)
@@ -113,9 +114,12 @@ def evaluate(model, valid_data, criterion, test=False, dir=None):
         # output = [trg len, batch size, output dim]
         shape = output.shape
         output_dim = shape[-1]
-        output = output.view(-1, output_dim)
-        trg = trg.view(-1, output_dim)
+        # output = output.view(-1, output_dim)
+        # trg = trg.view(-1, output_dim)
         loss = criterion(output, trg)
+        d_output = (output[1:, :, :] - output[0:-1, :, :]).view(-1, output_dim)
+        d_target = (trg[1:, :, :] - trg[0:-1, :, :]).view(-1, output_dim)
+        loss = loss + criterion(d_output, d_target)
 
         if test:
             torch.save(trg.view(shape), os.path.join(path, dir) + '/target.pt')
@@ -133,7 +137,7 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
-def run(N_EPOCHS=20000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropout_enc=0.5,
+def run(N_EPOCHS=12000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropout_enc=0.5,
         dropout_dec=0.5):
     # N_EPOCHS = 300
     # CLIP = 1
@@ -149,7 +153,7 @@ def run(N_EPOCHS=20000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropou
     # number_of_layers = 3
     # dropout_enc = 0.5
     # dropout_dec = 0.5
-    directory = 'full__hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_drop' + \
+    directory = 'derivative_full__hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_drop' + \
                 str(dropout_dec).replace('.', '') + '_epoch' + str(N_EPOCHS)
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
     dec = Decoder(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
@@ -166,6 +170,8 @@ def run(N_EPOCHS=20000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropou
     optimizer = optim.Adam(model.parameters())
     # criterion = nn.CrossEntropyLoss()
     criterion = nn.MSELoss()
+    # criterion = weighted_MSEloss
+    # criterion = extended_MSEloss
     # criterion = nn.KLDivLoss()
     print(device)
     for epoch in range(N_EPOCHS):
