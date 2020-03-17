@@ -108,9 +108,9 @@ class LSTM2(nn.Module):
         return hidden.zero_(), cell.zero_()
 
 
-class Encoder(nn.Module):
+class Encoder_LSTM(nn.Module):
     def __init__(self, input_dim, hid_dim, n_layers, dropout):
-        super(Encoder, self).__init__()
+        super(Encoder_LSTM, self).__init__()
         self.hid_dim = hid_dim
         self.n_layers = n_layers
         # [batch, seq, feature] <--- if batch_first=True
@@ -137,9 +137,9 @@ class Encoder(nn.Module):
         return hidden, cell
 
 
-class Decoder(nn.Module):
+class Decoder_LSTM(nn.Module):
     def __init__(self, output_dim, hid_dim, n_layers, dropout):
-        super(Decoder, self).__init__()
+        super(Decoder_LSTM, self).__init__()
         self.output_dim = output_dim
         self.hid_dim = hid_dim
         self.n_layers = n_layers
@@ -280,6 +280,32 @@ class CNN(nn.Module):
         output = self.fc2(output)
         output = self.soft(output)
         return output
+
+
+class AutoEncoder(nn.Module):
+    def __init__(self, encoder, decoder):
+        super(AutoEncoder, self).__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+
+
+class Encoder_Simple(nn.Module):
+    def __init__(self, input_channels, seq_length, context_dim):
+        super(Encoder_Simple, self).__init__()
+        self.input_dim = input_channels * seq_length
+        self.encoder = nn.Sequential(
+            nn.Linear(self.input_dim, self.input_dim//2),
+            nn.ReLU(True),
+            nn.Linear(self.input_dim//2, self.input_dim//3),
+            nn.ReLU(True), nn.Linear(self.input_dim//3, context_dim))
+
+    def forward(self, x):
+        return self.encoder(x.view(-1, self.input_dim))
 
 
 def weighted_MSEloss(output, target, const=10):

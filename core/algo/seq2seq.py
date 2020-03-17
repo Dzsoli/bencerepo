@@ -161,8 +161,8 @@ def run(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, dropou
     # dropout_dec = 0.5
     directory = 'norm_derivative05_full__hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_drop' + \
                 str(dropout_dec).replace('.', '') + '_epoch' + str(N_EPOCHS)
-    enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
-    dec = Decoder(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
+    enc = Encoder_LSTM(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
+    dec = Decoder_LSTM(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
     model = Seq2Seq(encoder=enc, decoder=dec, device=device).to(device)
     train_data = torch.tensor(train_data).transpose(1, 0).transpose(0, 2).float().to(device)
     test_data = torch.tensor(test_data).transpose(1, 0).transpose(0, 2).float().to(device)
