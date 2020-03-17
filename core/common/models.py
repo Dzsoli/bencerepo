@@ -308,6 +308,25 @@ class Encoder_Simple(nn.Module):
         return self.encoder(x.view(-1, self.input_dim))
 
 
+class Decoder_Simple(nn.Module):
+    def __init__(self, output_channels, seq_length, context_dim):
+        super(Decoder_Simple, self).__init__()
+        self.seq_length = seq_length
+        self.output_channels = output_channels
+        self.input_dim = output_channels * seq_length
+        self.decoder = nn.Sequential(
+            nn.Linear(context_dim, self.input_dim//3),
+            nn.ReLU(True),
+            nn.Linear(self.input_dim//3, self.input_dim//2),
+            nn.ReLU(True),
+            nn.Linear(self.input_dim//2, self.input_dim), nn.Tanh())
+
+    def forward(self, x):
+        x = 0.5 * self.decoder(x) + 0.5
+        x = x.view(-1, self.seq_length, self.output_channels)
+        return x
+
+
 def weighted_MSEloss(output, target, const=10):
     loss = torch.mean((output - target) ** 2)
     loss = loss + const * torch.mean((output[0, :, :] - target[0, :, :]) ** 2) \

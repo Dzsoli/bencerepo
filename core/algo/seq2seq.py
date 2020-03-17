@@ -222,6 +222,5 @@ def run(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, dropou
     logger.info('test loss: ' + str(test_loss))
 
 
-
 if __name__ == '__main__':
     run()
