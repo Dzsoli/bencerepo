@@ -13,6 +13,7 @@ import time
 from core.utils import *
 from core import common
 
+import logging
 import warnings
 
 from core.utils import *
@@ -86,9 +87,9 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
     # output = output.view(-1, output_dim)
     # trg = trg.view(-1, output_dim)
     loss = l_criterion(output, trg)
-    d_output = (output[1:, :, :] - output[0:-1, :, :]).view(-1, output_dim)
-    d_target = (trg[1:, :, :] - trg[0:-1, :, :]).view(-1, output_dim)
-    loss = loss + l_criterion(d_output, d_target)
+    # d_output = (output[1:, :, :] - output[0:-1, :, :]).view(-1, output_dim)
+    # d_target = (trg[1:, :, :] - trg[0:-1, :, :]).view(-1, output_dim)
+    # loss = loss + l_criterion(d_output, d_target)
     loss.backward()
 
     # torch.nn.utils.clip_grad_norm_(l_model.parameters(), l_clip)
@@ -98,7 +99,7 @@ def train(l_model, l_train_data, l_optimizer, l_criterion, l_clip):
     return loss.item()
 
 
-def evaluate(model, valid_data, criterion, test=False, dir=None):
+def evaluate(model, valid_data, criterion, test=False, best=False, dir=None):
     model.eval()
 
     epoch_loss = 0
@@ -117,13 +118,18 @@ def evaluate(model, valid_data, criterion, test=False, dir=None):
         # output = output.view(-1, output_dim)
         # trg = trg.view(-1, output_dim)
         loss = criterion(output, trg)
-        d_output = (output[1:, :, :] - output[0:-1, :, :]).view(-1, output_dim)
-        d_target = (trg[1:, :, :] - trg[0:-1, :, :]).view(-1, output_dim)
-        loss = loss + criterion(d_output, d_target)
+        # d_output = (output[1:, :, :] - output[0:-1, :, :]).view(-1, output_dim)
+        # d_target = (trg[1:, :, :] - trg[0:-1, :, :]).view(-1, output_dim)
+        # loss = loss + criterion(d_output, d_target)
 
         if test:
             torch.save(trg.view(shape), os.path.join(path, dir) + '/target.pt')
             torch.save(output.view(shape), os.path.join(path, dir) + '/output.pt')
+            print(output.shape)
+
+        if best:
+            torch.save(trg.view(shape), os.path.join(path, dir) + '/train_target.pt')
+            torch.save(output.view(shape), os.path.join(path, dir) + '/train_output.pt')
             print(output.shape)
 
     return loss.item()
@@ -137,7 +143,7 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
-def run(N_EPOCHS=12000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropout_enc=0.5,
+def run(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, dropout_enc=0.5,
         dropout_dec=0.5):
     # N_EPOCHS = 300
     # CLIP = 1
@@ -153,7 +159,7 @@ def run(N_EPOCHS=12000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropou
     # number_of_layers = 3
     # dropout_enc = 0.5
     # dropout_dec = 0.5
-    directory = 'derivative_full__hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_drop' + \
+    directory = 'norm_derivative05_full__hid' + str(hidden_dim) + '_layer' + str(number_of_layers) + '_drop' + \
                 str(dropout_dec).replace('.', '') + '_epoch' + str(N_EPOCHS)
     enc = Encoder(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
     dec = Decoder(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
@@ -163,16 +169,15 @@ def run(N_EPOCHS=12000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropou
     valid_data = torch.tensor(valid_data).transpose(1, 0).transpose(0, 2).float().to(device)
     # normalize the data sample wise
     # every sequence is divided by the max value of the sequence by every feature
-    train_data = train_data / train_data.max(dim=1, keepdim=True)[0]
-    test_data = test_data / test_data.max(dim=1, keepdim=True)[0]
-    valid_data = valid_data / valid_data.max(dim=1, keepdim=True)[0]
+    train_data = (train_data - train_data.min(dim=1, keepdim=True)[0]) / train_data.max(dim=1, keepdim=True)[0]
+    test_data = (test_data - test_data.min(dim=1, keepdim=True)[0]) / test_data.max(dim=1, keepdim=True)[0]
+    valid_data = (valid_data - valid_data.min(dim=1, keepdim=True)[0]) / valid_data.max(dim=1, keepdim=True)[0]
 
     optimizer = optim.Adam(model.parameters())
-    # criterion = nn.CrossEntropyLoss()
-    criterion = nn.MSELoss()
+    # criterion = nn.MSELoss()
+    criterion = Custom_Loss(0.5)
     # criterion = weighted_MSEloss
     # criterion = extended_MSEloss
-    # criterion = nn.KLDivLoss()
     print(device)
     for epoch in range(N_EPOCHS):
 
@@ -189,20 +194,33 @@ def run(N_EPOCHS=12000, CLIP=1, q=0.1, hidden_dim=10, number_of_layers=3, dropou
             best_valid_loss = valid_loss
             if not os.path.exists(os.path.join(path, directory)):
                 os.makedirs(os.path.join(path, directory))
-            file_name = os.path.join(path, directory) + '/model_parameters.pt'
-            torch.save(model.state_dict(), file_name)
+            model_params_file_name = os.path.join(path, directory) + '/model_parameters.pt'
+            torch.save(model.state_dict(), model_params_file_name)
             best_epoch_number = epoch
 
         print('epoch: ', epoch, 'time: ', epoch_mins, 'mins', epoch_secs,'secs', epoch_milisecs, 'mili secs')
         print('train loss: ', train_loss)
         print('valid loss: ', valid_loss)
 
-    model.load_state_dict(torch.load(file_name))
+    model.load_state_dict(torch.load(model_params_file_name))
 
     test_loss = evaluate(model, test_data, criterion, test=True, dir=directory)
+    best_train_loss = evaluate(model, train_data, criterion, best=True, dir=directory)
     print('best epoch number: ', best_epoch_number)
     print('best valid loss: ', best_valid_loss)
+    print('corresponding train loss: ', best_train_loss)
     print('test loss: ', test_loss)
+    logger = logging.getLogger('logfile')
+    hdlr = logging.FileHandler(os.path.join(path, directory) + '/logfile.log')
+    formatter = logging.Formatter('%(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    logger.info('best epoch number: ' + str(best_epoch_number))
+    logger.info('best valid loss: ' + str(best_valid_loss))
+    logger.info('corresponding train loss: ' + str(best_train_loss))
+    logger.info('test loss: ' + str(test_loss))
+
 
 
 if __name__ == '__main__':

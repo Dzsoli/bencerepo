@@ -33,7 +33,7 @@ def plot_target_pred(target, prediction):
 def run():
     print(RESULTS_PATH)
     print()
-    local_path = RESULTS_PATH + '\seq2seq_lstm\\derivative_full__hid10_layer3_drop05_epoch12000'
+    local_path = RESULTS_PATH + '\seq2seq_lstm\\norm_derivative_full__hid30_layer4_drop05_epoch25000'
 
     predictions = np.array(torch.load(local_path + '/output.pt', map_location='cpu'))
     targets = np.array(torch.load(local_path + '/target.pt', map_location='cpu'))

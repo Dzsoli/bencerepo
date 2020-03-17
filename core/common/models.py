@@ -298,3 +298,17 @@ def extended_MSEloss(output, target):
     # loss2 = nn.MSELoss(d_output, d_target)
     # return (loss1 + loss2) / 2
     return loss1
+
+
+class Custom_Loss(nn.Module):
+    def __init__(self, weight):
+        super(Custom_Loss, self).__init__()
+        self.weight = weight
+
+    def forward(self, output, target):
+        loss1 = F.mse_loss(output, target, reduction='mean')
+        d_output = output[1:, :, :] - output[0:-1, :, :]
+        d_target = target[1:, :, :] - target[0:-1, :, :]
+        loss2 = F.mse_loss(d_output, d_target, reduction='mean')
+        return loss1 + loss2 * self.weight
+
