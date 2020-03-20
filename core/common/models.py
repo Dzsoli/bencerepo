@@ -108,9 +108,9 @@ class LSTM2(nn.Module):
         return hidden.zero_(), cell.zero_()
 
 
-class Encoder_LSTM(nn.Module):
+class EncoderLSTM(nn.Module):
     def __init__(self, input_dim, hid_dim, n_layers, dropout):
-        super(Encoder_LSTM, self).__init__()
+        super(EncoderLSTM, self).__init__()
         self.hid_dim = hid_dim
         self.n_layers = n_layers
         # [batch, seq, feature] <--- if batch_first=True
@@ -137,9 +137,9 @@ class Encoder_LSTM(nn.Module):
         return hidden, cell
 
 
-class Decoder_LSTM(nn.Module):
+class DecoderLSTM(nn.Module):
     def __init__(self, output_dim, hid_dim, n_layers, dropout):
-        super(Decoder_LSTM, self).__init__()
+        super(DecoderLSTM, self).__init__()
         self.output_dim = output_dim
         self.hid_dim = hid_dim
         self.n_layers = n_layers
@@ -294,37 +294,90 @@ class AutoEncoder(nn.Module):
         return x
 
 
-class Encoder_Simple(nn.Module):
+class EncoderSimple(nn.Module):
     def __init__(self, input_channels, seq_length, context_dim):
-        super(Encoder_Simple, self).__init__()
+        super(EncoderSimple, self).__init__()
         self.input_dim = input_channels * seq_length
-        self.encoder = nn.Sequential(
+        self.context_dim = context_dim
+        self.encoder1 = nn.Sequential(
             nn.Linear(self.input_dim, self.input_dim//2),
             nn.ReLU(True),
             nn.Linear(self.input_dim//2, self.input_dim//3),
-            nn.ReLU(True), nn.Linear(self.input_dim//3, context_dim))
+            nn.ReLU(True), nn.Linear(self.input_dim//3, self.context_dim))
+        self.encoder2 = nn.Sequential(
+            nn.Linear(self.input_dim, 110),
+            nn.ReLU(True),
+            nn.Linear(110, 100),
+            nn.ReLU(True),
+            nn.Linear(100, 90),
+            nn.ReLU(True),
+            nn.Linear(90, 80),
+            nn.ReLU(True),
+            nn.Linear(80, 70),
+            nn.ReLU(True),
+            nn.Linear(70, 60),
+            nn.ReLU(True),
+            nn.Linear(60, 50),
+            nn.ReLU(True),
+            nn.Linear(50, 40),
+            nn.ReLU(True),
+            nn.Linear(40, 30),
+            nn.ReLU(True),
+            nn.Linear(30, 20),
+            nn.ReLU(True), nn.Linear(20, self.context_dim))
 
     def forward(self, x):
-        return self.encoder(x.view(-1, self.input_dim))
+        return self.encoder2(x.view(-1, self.input_dim))
 
 
-class Decoder_Simple(nn.Module):
+class DecoderSimple(nn.Module):
     def __init__(self, output_channels, seq_length, context_dim):
-        super(Decoder_Simple, self).__init__()
+        super(DecoderSimple, self).__init__()
         self.seq_length = seq_length
         self.output_channels = output_channels
         self.input_dim = output_channels * seq_length
-        self.decoder = nn.Sequential(
-            nn.Linear(context_dim, self.input_dim//3),
+        self.context_dim = context_dim
+        self.decoder1 = nn.Sequential(
+            nn.Linear(self.context_dim, self.input_dim//3),
             nn.ReLU(True),
             nn.Linear(self.input_dim//3, self.input_dim//2),
             nn.ReLU(True),
             nn.Linear(self.input_dim//2, self.input_dim), nn.Tanh())
+        self.decoder2 = nn.Sequential(
+            nn.Linear(self.context_dim, 20),
+            nn.ReLU(True),
+            nn.Linear(20, 30),
+            nn.ReLU(True),
+            nn.Linear(30, 40),
+            nn.ReLU(True),
+            nn.Linear(40, 50),
+            nn.ReLU(True),
+            nn.Linear(50, 60),
+            nn.ReLU(True),
+            nn.Linear(60, 70),
+            nn.ReLU(True),
+            nn.Linear(70, 80),
+            nn.ReLU(True),
+            nn.Linear(80, 90),
+            nn.ReLU(True),
+            nn.Linear(90, 100),
+            nn.ReLU(True),
+            nn.Linear(100, 110),
+            nn.ReLU(True),
+            nn.Linear(110, self.input_dim), nn.Tanh())
 
     def forward(self, x):
-        x = 0.5 * self.decoder(x) + 0.5
-        x = x.view(-1, self.seq_length, self.output_channels)
+        x = 0.5 * self.decoder2(x) + 0.5
+        x = x.view(-1, self.output_channels, self.seq_length)
         return x
+
+
+class DecoderConv1d(nn.Module):
+    def __init__(self, output_channels, seq_length, context_dim):
+        super(DecoderConv1d, self).__init__()
+        self.seq_length = seq_length
+        self.output_channels = output_channels
+        self.input_dim = output_channels * seq_length
 
 
 def weighted_MSEloss(output, target, const=10):
@@ -345,9 +398,9 @@ def extended_MSEloss(output, target):
     return loss1
 
 
-class Custom_Loss(nn.Module):
+class CustomLoss(nn.Module):
     def __init__(self, weight):
-        super(Custom_Loss, self).__init__()
+        super(CustomLoss, self).__init__()
         self.weight = weight
 
     def forward(self, output, target):

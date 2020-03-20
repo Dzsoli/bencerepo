@@ -26,8 +26,8 @@ def train_lstm(l_train_loader, l_test_loader, l_lr, l_num_epochs, l_neuron, l_la
     optimizer = optim.SGD(model.parameters(), lr=l_lr, weight_decay=1e-6, momentum=0.9, nesterov=True)
     optimizer_adam = optim.Adam(model.parameters(), lr=l_lr)
 
-    lstm_training.run(l_train_loader=l_train_loader, l_test_loader=l_test_loader, l_model=model, l_loss_fn=loss_fn,
-                      l_num_epochs=l_num_epochs, l_optimizer=optimizer_adam, l_lr=l_lr)
+    lstm_training.run_lstm(l_train_loader=l_train_loader, l_test_loader=l_test_loader, l_model=model, l_loss_fn=loss_fn,
+                           l_num_epochs=l_num_epochs, l_optimizer=optimizer_adam, l_lr=l_lr)
 
 
 if __name__ == '__main__':

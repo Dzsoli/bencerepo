@@ -31,8 +31,8 @@ layers = [1, 2, 3, 4]
 for lay in layers:
     for hid in hidden:
         for drop in dropout:
-            seq2seq.run(hidden_dim=hid,
-                        number_of_layers=lay,
-                        dropout_enc=drop, dropout_dec=drop)
+            seq2seq.run_lstm(hidden_dim=hid,
+                             number_of_layers=lay,
+                             dropout_enc=drop, dropout_dec=drop)
 
 
