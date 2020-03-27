@@ -32,14 +32,14 @@ valid_labels = labels[int((1 - 2*q) * data.shape[0]):int((1 - q) * data.shape[0]
 test_data = data[int((1 - q) * data.shape[0]):]
 test_labels = labels[int((1 - q) * data.shape[0]):]
 
-train_data = torch.from_numpy(train_data).float().to(device)
+train_data = torch.from_numpy(train_data).float().to(DEVICE)
 print(train_data.size())
-train_labels = torch.LongTensor(train_labels).to(device=device, dtype=torch.float)
-valid_data = torch.from_numpy(valid_data).float().to(device)
-valid_labels = torch.LongTensor(valid_labels).to(device=device, dtype=torch.float)
+train_labels = torch.LongTensor(train_labels).to(device=DEVICE, dtype=torch.float)
+valid_data = torch.from_numpy(valid_data).float().to(DEVICE)
+valid_labels = torch.LongTensor(valid_labels).to(device=DEVICE, dtype=torch.float)
 
 model = SimpleLSTM(3, 10)
-model = model.to(device)
+model = model.to(DEVICE)
 # loss = nn.MSELoss()
 loss = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -69,8 +69,8 @@ for epoch in range(num_epochs):
     # print('epoch: {}, train loss: {}'.format(epoch, err))
     valid_acc.append(acc)
 
-test_data = torch.from_numpy(test_data).float().to(device)
-test_labels = torch.LongTensor(test_labels).to(device=device, dtype=torch.float)
+test_data = torch.from_numpy(test_data).float().to(DEVICE)
+test_labels = torch.LongTensor(test_labels).to(device=DEVICE, dtype=torch.float)
 testing(model, test_data, test_labels)
 plt.plot(train_error)
 plt.ylabel("Training losses")

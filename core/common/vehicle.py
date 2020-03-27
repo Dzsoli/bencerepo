@@ -7,11 +7,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import pickle
-# from core.common import *
+from core.common import *
 from core import common
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = 'cpu'
+device = common.DEVICE
 
 feetToMeters = lambda feet: float(feet) * 0.3048
 converters_dict = {'Local_X': feetToMeters,

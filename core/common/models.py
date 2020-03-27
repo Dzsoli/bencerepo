@@ -9,7 +9,7 @@ from torch import optim
 import torch.nn as nn
 import random
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = 'cpu'
 
 
