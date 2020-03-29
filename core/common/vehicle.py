@@ -12,7 +12,8 @@ from core import common
 
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = 'cpu'
-device = common.DEVICE
+# device = LOCAL_DEVICE
+
 
 feetToMeters = lambda feet: float(feet) * 0.3048
 converters_dict = {'Local_X': feetToMeters,

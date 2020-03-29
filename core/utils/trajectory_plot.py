@@ -40,14 +40,15 @@ def run():
     print(predictions.shape, targets.shape)
     predictions = np.transpose(predictions, (1, 0, 2))
     targets = np.transpose(targets, (1, 0, 2))
-
+    print("Shape of target and prediction: ", targets.shape, "\n",
+          "Expected shape: Batch, window size, feature dimension")
     # it is needed only for the autoencoder but nah...
     # predictions = np.transpose(predictions, (0, 2, 1))
     # targets = np.transpose(targets, (0, 2, 1))
     i = 0
     for trg, pred in zip(targets, predictions):
         if i > -1:
-            print(trg.shape, pred.shape)
+            # print(trg.shape, pred.shape)
             plot_target_pred(trg, pred)
         i += 1
 

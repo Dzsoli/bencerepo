@@ -355,8 +355,9 @@ def preprocess_for_coding(raw_dataset: VehicleDataset, window_size: int) -> Dict
 
 
 def run():
-    i_80 = "../../../full_data/i-80.csv"
-    us_101 = "../../../full_data/us-101.csv"
+    i_80 = FULLDATA_PATH + '/i-80.csv'
+    us_101 = FULLDATA_PATH + '/us-101.csv'
+    print(i_80, us_101)
     raw_dataset_1 = VehicleDataset(us_101)
     raw_dataset_1.create_vehicle_objects()
     # print(raw_dataset.vehicle_objects[0].lane_id, raw_dataset.vehicle_objects[1].lane_id)

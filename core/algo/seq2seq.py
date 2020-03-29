@@ -30,7 +30,7 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
-
+# print(FULLDATA_PATH)
 path = None
 # if not os.path.exists(path):
 #     os.makedirs(path)
@@ -144,7 +144,7 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
-def run_lstm(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, dropout_enc=0.5,
+def run_lstm(N_EPOCHS=5, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, dropout_enc=0.5,
              dropout_dec=0.5):
     # N_EPOCHS = 300
     # CLIP = 1
@@ -167,10 +167,10 @@ def run_lstm(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, d
                 str(dropout_dec).replace('.', '') + '_epoch' + str(N_EPOCHS)
     enc = EncoderLSTM(input_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_enc)
     dec = DecoderLSTM(output_dim=feature_dim, hid_dim=hidden_dim, n_layers=number_of_layers, dropout=dropout_dec)
-    model = Seq2Seq(encoder=enc, decoder=dec, device=DEVICE).to(DEVICE)
-    train_data = torch.tensor(train_data).transpose(1, 0).transpose(0, 2).float().to(DEVICE)
-    test_data = torch.tensor(test_data).transpose(1, 0).transpose(0, 2).float().to(DEVICE)
-    valid_data = torch.tensor(valid_data).transpose(1, 0).transpose(0, 2).float().to(DEVICE)
+    model = Seq2Seq(encoder=enc, decoder=dec, device=LOCAL_DEVICE).to(LOCAL_DEVICE)
+    train_data = torch.tensor(train_data).transpose(1, 0).transpose(0, 2).float().to(LOCAL_DEVICE)
+    test_data = torch.tensor(test_data).transpose(1, 0).transpose(0, 2).float().to(LOCAL_DEVICE)
+    valid_data = torch.tensor(valid_data).transpose(1, 0).transpose(0, 2).float().to(LOCAL_DEVICE)
     # normalize the data sample wise
     # every sequence is divided by the max value of the sequence by every feature
     train_data = (train_data - train_data.min(dim=1, keepdim=True)[0]) / train_data.max(dim=1, keepdim=True)[0]
@@ -182,7 +182,7 @@ def run_lstm(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, d
     criterion = CustomLoss(0.5)
     # criterion = weighted_MSEloss
     # criterion = extended_MSEloss
-    print(DEVICE)
+    print(LOCAL_DEVICE)
     for epoch in range(N_EPOCHS):
 
         start_time = time.time()
@@ -248,10 +248,10 @@ def run_simple(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=10):
     directory = 'norm_derivative05_full__hid' + str(hidden_dim) + '_epoch' + str(N_EPOCHS)
     enc = EncoderSimple(input_channels=feature_dim, seq_length=seq_length, context_dim=hidden_dim)
     dec = DecoderSimple(output_channels=feature_dim, seq_length=seq_length, context_dim=hidden_dim)
-    model = AutoEncoder(encoder=enc, decoder=dec).to(DEVICE)
-    train_data = torch.tensor(train_data).float().to(DEVICE)
-    test_data = torch.tensor(test_data).float().to(DEVICE)
-    valid_data = torch.tensor(valid_data).float().to(DEVICE)
+    model = AutoEncoder(encoder=enc, decoder=dec).to(LOCAL_DEVICE)
+    train_data = torch.tensor(train_data).float().to(LOCAL_DEVICE)
+    test_data = torch.tensor(test_data).float().to(LOCAL_DEVICE)
+    valid_data = torch.tensor(valid_data).float().to(LOCAL_DEVICE)
 
     # normalize the data sample wise
     # every sequence is divided by the max value of the sequence by every feature
@@ -264,7 +264,7 @@ def run_simple(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=10):
     # criterion = CustomLoss(0.5)
     # criterion = weighted_MSEloss
     # criterion = extended_MSEloss
-    print(DEVICE)
+    print(LOCAL_DEVICE)
     for epoch in range(N_EPOCHS):
 
         start_time = time.time()

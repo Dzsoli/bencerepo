@@ -41,7 +41,7 @@ class TrainingBase:
         self.train_loss = []
         self.valid_loss = []
         self.test_loss = []
-        self.device = common.DEVICE
+        self.device = common.LOCAL_DEVICE
 
     def set_seed(self):
         random.seed(self.seed)

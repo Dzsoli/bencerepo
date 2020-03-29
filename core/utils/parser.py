@@ -6,9 +6,6 @@ from core.common import *
 
 
 def parser():
-    #Todo: dataframe groupby https://stackoverflow.com/questions/40498463/python-splitting-dataframe-into-multiple-dataframes-based-on-column-values-and/40498517
-    #https://stackoverflow.com/questions/33742588/pandas-split-dataframe-by-column-value/33742822
-    #Todo: ezzel meg lehet cisnálni az egész szeparációt is akár
     csv_file = "../../../full_data/full_data.csv"
 
     feetToMeters = lambda feet: float(feet) * 0.3048
@@ -24,8 +21,9 @@ def parser():
     full_data = full_data.sort_values(by=['Location', 'Vehicle_ID', 'Frame_ID', 'Total_Frames'])
 
     for _, location in full_data.groupby('Location'):
-        path = "../../../full_data/"
-        name = location['Location'].values[0] + ".csv"
+        # path = "../../../full_data/"
+        path = FULLDATA_PATH
+        name = "/" + location['Location'].values[0] + ".csv"
         location.to_csv(path + name)
 
 

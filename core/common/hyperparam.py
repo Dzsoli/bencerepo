@@ -8,4 +8,4 @@ RESULTS_PATH = os.path.abspath(os.path.join(GIT_REPO_PATH, '../results/'))
 FULLDATA_PATH = os.path.abspath(os.path.join(GIT_REPO_PATH, '../full_data/'))
 # print(RESULTS_PATH)
 
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+LOCAL_DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
