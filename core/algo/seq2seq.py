@@ -36,7 +36,16 @@ path = None
 #     os.makedirs(path)
 
 
-def load_data(features: str, q, path='../../../full_data/'):
+def load_data(features: str, q, path=FULLDATA_PATH + "/"):
+
+    """
+
+    :param features: ez egy string, amivel kiegészül a file neve. Pl ha az X és Y koordinátákat akarod betölteni, akkor
+                    features= "X_Y", vagy "X_Yfull". Utóbbi a shift nélküli l. preprocess.py
+    :param q: Ez határozza meg, hogy milyen arányban legyenek vágva az adatok. train:valid:test = 1-2q,q,q.
+    :param path: a full_data mappa elérési útja a default, de meg lehet adni mást.
+    :return:
+    """
 
     l_data = np.load(path + features + '_dataset.npy')
     # l_labels = np.load(path + features + '_labels.npy')
@@ -144,7 +153,7 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs, elapsed_milisecs
 
 
-def run_lstm(N_EPOCHS=5, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, dropout_enc=0.5,
+def run_lstm(N_EPOCHS=6, CLIP=1, q=0.1, hidden_dim=60, number_of_layers=4, dropout_enc=0.5,
              dropout_dec=0.5):
     # N_EPOCHS = 300
     # CLIP = 1
@@ -248,6 +257,10 @@ def run_simple(N_EPOCHS=25000, CLIP=1, q=0.1, hidden_dim=10):
     directory = 'norm_derivative05_full__hid' + str(hidden_dim) + '_epoch' + str(N_EPOCHS)
     enc = EncoderSimple(input_channels=feature_dim, seq_length=seq_length, context_dim=hidden_dim)
     dec = DecoderSimple(output_channels=feature_dim, seq_length=seq_length, context_dim=hidden_dim)
+    """
+    Itt küldöm a tenzorokat az elérhető eszközre. Cuda ha van, egyébként cpu.
+    Ezek után már nincs változtatva.
+    """
     model = AutoEncoder(encoder=enc, decoder=dec).to(LOCAL_DEVICE)
     train_data = torch.tensor(train_data).float().to(LOCAL_DEVICE)
     test_data = torch.tensor(test_data).float().to(LOCAL_DEVICE)

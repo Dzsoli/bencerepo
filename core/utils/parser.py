@@ -6,7 +6,7 @@ from core.common import *
 
 
 def parser():
-    csv_file = "../../../full_data/full_data.csv"
+    csv_file = FULLDATA_PATH + "/full_data.csv"
 
     feetToMeters = lambda feet: float(feet) * 0.3048
     converters_dict = {'Local_X': feetToMeters,

@@ -10,6 +10,18 @@ from core.common import *
 
 
 def preprocess_for_classification(raw_dataset: VehicleDataset, window_size: int, shift: int) -> Dict[str, Trajectories]:
+
+    """
+    :param raw_dataset: Ez egy VehicleDataset osztály, amiben egy listában vannak tárolva a jármű objektumok.
+    :param window_size: A szekvencia hossza
+    :param shift: Az az egész szám, amivel eltova vannak egymáshoz képest a szekvenciák
+    :return: Egy dictionaryvel tér vissza, ami tartalmazza a feature-ök nevét, és a Trajektóriákat.
+
+    Bevallom, lehet hogy a shift=5 és windows size=30 paramétereken kívül elhasal, mert úgy rémlik hogy nem teszteltem
+    más értékekre.
+
+    """
+
     vehicle_objects = raw_dataset.vehicle_objects
     number = 0
     number_left = 0
@@ -184,6 +196,14 @@ def preprocess_for_classification(raw_dataset: VehicleDataset, window_size: int,
 
 
 def preprocess_for_coding(raw_dataset: VehicleDataset, window_size: int) -> Dict[str, Trajectories]:
+
+    """
+
+    :param raw_dataset: Ez egy VehicleDataset osztály, amiben egy listában vannak tárolva a jármű objektumok.
+    :param window_size: A szekvencia hossza
+    :return: Egy dictionaryvel tér vissza, ami tartalmazza a feature-ök nevét, és a Trajektóriákat.
+    """
+
     vehicle_objects = raw_dataset.vehicle_objects
     number = 0
     number_left = 0
@@ -362,6 +382,9 @@ def run():
     raw_dataset_1.create_vehicle_objects()
     # print(raw_dataset.vehicle_objects[0].lane_id, raw_dataset.vehicle_objects[1].lane_id)
     window_size = 60
+    # ha a klasszifikációhoz való preprocess_for_classification függvényt használod, akkor
+    # window_size = 30  # az érdemesebb választés
+
     shift = 5
     dict_trajectories_1 = preprocess_for_coding(raw_dataset_1, window_size)
     raw_dataset_2 = VehicleDataset(i_80)
@@ -371,6 +394,10 @@ def run():
         traject = dict_trajectories_1[key] + dict_trajectories_2[key]
         traject.create_dataset()
         traject.save_np_dataset_labels(name=key, mode="full")
+        # ha a klasszifikációhoz való preprocess_for_classification függvényt használod, akkor
+        # a mentésnél nem kell a mode="full" :
+        # traject.save_np_dataset_labels(name=key)
+
 
 
 if __name__ == '__main__':
